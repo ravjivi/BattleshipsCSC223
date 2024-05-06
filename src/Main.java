@@ -1,11 +1,12 @@
 /* 
 * PROJECT TITLE: Battleships
-* VERSION or DATE: Version 1, 05.05.24
+* VERSION or DATE: Version 1.1, 06.05.24
 * AUTHOR: Viraaj Ravji
 * DETAILS:
-    * This Version creates a simple GUI that can be scaled depending on the user's monitor size
-    * Buttons are created but serve no function
-    * The GUI is expanded so I can add a second grid without causing issues in the future
+    * This Version adds buttons for the battleships
+    * All buttons still have no function
+    * Updated the GUIWIDTH calculation to avoid stretching on wide/ultrawide monitors
+    * Added very basic textures for the battleship
 */
 
 /*LIBRARY*/
@@ -15,8 +16,10 @@ import java.awt.*;
 public class Main { 
     //constants
     public static Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-    public static final int GUIWIDTH = (int)screenSize.getWidth() * 3 / 4; //width of the GUI
-    public static final int GUIHEIGHT = (int)screenSize.getHeight() / 2; //height of the GUI
+    //Takes the height of the screen and calculates size of the GUI
+    public static final int GUIHEIGHT = (int)screenSize.getHeight() / 2; 
+    public static final int GUIWIDTH = GUIHEIGHT*5/2; //width of the GUI
+    
     public static final int GUITAB = 30; //this the tab where the title is written above the GUI screen
 
     public static void Grid() { //creates the GUI and grid
@@ -55,6 +58,30 @@ public class Main {
                 }
             }
         }
+        
+        //Battleships right of grid
+        JButton[] ships = new JButton[5];
+       
+        ships[0]=new JButton(new ImageIcon("assets/ship_texture_h2.jpg")); 
+        ships[1]=new JButton(new ImageIcon("assets/ship_texture_h3.jpg")); 
+        ships[2]=new JButton(new ImageIcon("assets/ship_texture_h3.jpg")); 
+        ships[3]=new JButton(new ImageIcon("assets/ship_texture_h4.jpg")); 
+        ships[4]=new JButton(new ImageIcon("assets/ship_texture_h5.jpg")); 
+
+        
+        
+        ships[0].setBounds(tileWidth*12,tileHeight,tileWidth,tileHeight*2);  
+        ships[1].setBounds(tileWidth*15,tileHeight,tileWidth,tileHeight*3);  
+        ships[2].setBounds(tileWidth*18,tileHeight,tileWidth,tileHeight*3);
+        ships[3].setBounds(tileWidth*27/2,tileHeight*5,tileWidth,tileHeight*4); 
+        ships[4].setBounds(tileWidth*33/2,tileHeight*5,tileWidth,tileHeight*5);
+        
+        f.add(ships[0]);
+        f.add(ships[1]);
+        f.add(ships[2]);
+        f.add(ships[3]);
+        f.add(ships[4]);
+        
         //GUI window properties
         f.setSize(GUIWIDTH+GUITAB+(GUIWIDTH/20), GUIHEIGHT+GUITAB+GUITAB);  
         f.setLayout(null);  
