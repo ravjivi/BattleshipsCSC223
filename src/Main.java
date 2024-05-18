@@ -1,11 +1,12 @@
 /* 
 * PROJECT TITLE: Battleships
-* VERSION or DATE: Version 1.2, 17.05.24
+* VERSION or DATE: Version 1.3, 18.05.24
 * AUTHOR: Viraaj Ravji
 * DETAILS:
-    * Changes to images and scaling
-    * Buttons register clicks but don't function
-    * Converted battleships to a object
+    * Buttons registers clicks and changes selection variable
+    * Hovering mouse over grid while a ship is selected shows a preview of the ship of the grid
+    * Clicking on the grid does not place the ship
+    * Number of black buttons corrolates to the size of the ship
 */
 
 /*LIBRARY*/
@@ -23,13 +24,13 @@ public class Main implements ActionListener {
 
     private static JButton[][] DGrid = new JButton[10][10]; 
     private static JButton[] ships = new JButton[5];
-    Object userSelection;
+    private static int tileHeight = GUIHEIGHT/10; //tile spacing vertical
+    private static int tileWidth = GUIWIDTH/20; //tile spacing horizontal
+    private static int userSelection;
 
     public static void Grid() { //creates the GUI and grid
         /*grid vairables*/
         JFrame f=new JFrame("Battleships"); //creates JFrame, the GUI window
-        int tileHeight = GUIHEIGHT/10; //tile spacing vertical
-        int tileWidth = GUIWIDTH/20; //tile spacing horizontal
         String[] alphabetString = {"A", "B", "C", "D", "E", "F", "G", "H", "I", "J"};
         JLabel[] labels = new JLabel[20];
        
@@ -45,14 +46,61 @@ public class Main implements ActionListener {
                 f.add(DGrid[x][y]);  
                 DGrid[x][y].addActionListener(new ActionListener(){  
                     public void actionPerformed(ActionEvent e){  
-                        actionPerformed(e);
+                        System.out.println("Button Pressed");
                     }  
                 }); 
 
+                int newX = x; //Cant use the x from the for loop inside a local method
+                int newY = y;
+                for (int z=0; z<5; z++) {
+                    DGrid[x][y].addMouseListener(new java.awt.event.MouseAdapter() {
+                        public void mouseEntered(MouseEvent evt) {
+                            if (userSelection==1 || userSelection==2) {
+                                for (int n=0; n<userSelection+1; n++) {
+                                    if (newY+n > 9) {
+                                        n = userSelection+1;     
+                                    } else {
+                                        DGrid[newX][newY+n].setBackground(Color.black);
+                                    }   
+                                }   
+                            }  else if (userSelection==3||userSelection==4||userSelection==5) {
+                                for (int n=0; n<userSelection; n++) {
+                                    if (newY+n > 9) {
+                                        n = userSelection+1;
+                                    } else  {
+                                        DGrid[newX][newY+n].setBackground(Color.black);
+                                    } 
+                                }  
+                            }
+                        }
+                        public void mouseExited(MouseEvent evt) {
+                            if (userSelection>0) {
+                                if (userSelection==1 || userSelection==2) {
+                                    for (int n=0; n<userSelection+1; n++) {
+                                        if (newY+n > 9) {
+                                            n = userSelection+1;   
+                                        } else {
+                                            DGrid[newX][newY+n].setBackground(Color.white);
+                                        }   
+                                    }   
+                                }  else if (userSelection==3||userSelection==4||userSelection==5) {
+                                    for (int n=0; n<userSelection; n++) {
+                                        if (newY+n > 9) {
+                                            n = userSelection+1;
+                                        } else {
+                                            DGrid[newX][newY+n].setBackground(Color.white);
+                                        }
+                                    }  
+                                }
+                            }  
+                        }
+                    });
+                } 
             }
             yPos+=tileHeight; 
             xPos=GUITAB;
         }
+
         //adding labels on GUI
         for (int x=0, yPos=0; x<11; x++, yPos+=tileHeight) {
             if (x<10) {
@@ -72,18 +120,15 @@ public class Main implements ActionListener {
         Main ship2 = new Main(2, tileWidth, tileHeight, ships);
         Main ship3 = new Main(3, tileWidth, tileHeight, ships);
         Main ship4 = new Main(4, tileWidth, tileHeight, ships);
-
         f.add(ships[0]);
         f.add(ships[1]);
         f.add(ships[2]);
         f.add(ships[3]);
         f.add(ships[4]);
 
-        
-
         //GUI window properties
         f.setSize(GUIWIDTH+GUITAB+(GUIWIDTH/20), GUIHEIGHT+GUITAB+GUITAB);  
-        f.setLayout(null);  
+        f.setLayout(null); 
         f.setVisible(true);
     }
 
@@ -121,7 +166,6 @@ public class Main implements ActionListener {
                 ships[n] = new JButton(new ImageIcon(scaleshipImageH5));
                 ships[n].setBounds(tileWidth*33/2,tileHeight*5,tileWidth,tileHeight*5);
                 break;
-            
             default:
                 System.out.println ("Error: h");
                 break;
@@ -131,18 +175,17 @@ public class Main implements ActionListener {
 
     public void actionPerformed(ActionEvent e){
         Object src = e.getSource(); 
-        userSelection = src;
         for (int x=0; x<5; x++) {
-            if (userSelection == ships[x]) {
+            if (src.equals(ships[x])) {
                 System.out.println("User has selected Ship "+(x+1));
-            }
-        }
-        
+                userSelection = x+1;
+            } 
+        } 
     }  
 
     public static void main(String[] args) {  //called when the program is run
-        Grid(); //calls the grid method at the start of the program
         System.out.println("Window Width: "+GUIWIDTH);
         System.out.println("Window Height: "+GUIHEIGHT);
+        Grid(); //calls the grid method at the start of the program
     }  
 }  
