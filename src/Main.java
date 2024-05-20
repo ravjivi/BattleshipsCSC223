@@ -1,12 +1,11 @@
 /* 
 * PROJECT TITLE: Battleships
-* VERSION or DATE: Version 1.4, 20.05.24
+* VERSION or DATE: Version 1.5, 20.05.24
 * AUTHOR: Viraaj Ravji
 * DETAILS:
-    * You can click on the grid to place ships while ship is selected
-    * After placing atleast 1 ship you can reset them with the reset button
-    * You cannot rotate ships yet
-    * Placing ships with remove the button on the left, and place it on the grid
+    * Removed useless main constructor for ships
+    * Removed useless actionListner method
+    * Added everything to grid() method
 */
 
 /*LIBRARY*/
@@ -14,7 +13,7 @@ import javax.swing.*;
 import java.awt.*; 
 import java.awt.event.*;
 
-public class Main implements ActionListener { 
+public class Main { 
     /*Constants*/
     public static Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
     //Takes the height of the screen and calculates size of the GUI
@@ -58,8 +57,7 @@ public class Main implements ActionListener {
                 DGrid[x][y].setOpaque(true);
                 DGrid[x][y].setBorderPainted(false);
                 DGrid[x][y].setBounds(xPos,yPos,tileWidth,tileHeight);
-                f.add(DGrid[x][y]);  
-                
+                f.add(DGrid[x][y]);   
             }
             yPos+=tileHeight; 
             xPos=GUITAB;
@@ -79,52 +77,55 @@ public class Main implements ActionListener {
                 }
             }
         }
-        Main ship0 = new Main(0, tileWidth, tileHeight);
-        Main ship1 = new Main(1, tileWidth, tileHeight);
-        Main ship2 = new Main(2, tileWidth, tileHeight);
-        Main ship3 = new Main(3, tileWidth, tileHeight);
-        Main ship4 = new Main(4, tileWidth, tileHeight);
-        f.add(ships[0]);
-        f.add(ships[1]);
-        f.add(ships[2]);
-        f.add(ships[3]);
-        f.add(ships[4]);
+        for (int x=0; x<5; x++) {
+            switch (x) {
+                case 0:
+                    ships[x] = new JButton(new ImageIcon(scaleshipImageH2));
+                    ships[x].setBounds(tileWidth*12,tileHeight,tileWidth,tileHeight*2);
+                    break;
+                
+                case 1:
+                    ships[x] = new JButton(new ImageIcon(scaleshipImageH3));
+                    ships[x].setBounds(tileWidth*15,tileHeight,tileWidth,tileHeight*3);
+                    break;
+    
+                case 2:
+                    ships[x] = new JButton(new ImageIcon(scaleshipImageH3));
+                    ships[x].setBounds(tileWidth*18,tileHeight,tileWidth,tileHeight*3);
+                    break;
+                case 3:
+                    ships[x] = new JButton(new ImageIcon(scaleshipImageH4));
+                    ships[x].setBounds(tileWidth*27/2,tileHeight*5,tileWidth,tileHeight*4);
+                    break;
+                case 4:
+                    ships[x] = new JButton(new ImageIcon(scaleshipImageH5));
+                    ships[x].setBounds(tileWidth*33/2,tileHeight*5,tileWidth,tileHeight*5);
+                    break;
+                default:
+                    System.out.println ("Error: h"); break;
+            }
+            ships[x].addActionListener(new ActionListener(){  
+                public void actionPerformed(ActionEvent e){  
+                    Object src = e.getSource(); 
+                    for (int x=0; x<5; x++) {
+                        if (src.equals(ships[x])) {
+                            System.out.println("User has selected Ship "+(x+1));
+                            userSelection = x+1;
+                            shipSelection = x;
+                            if (userSelection > 2) {
+                                userSelection = x;
+                            }
+                        } 
+                    }       
+                }  
+            }); 
+            f.add(ships[x]); 
+        }
 
         //GUI window properties
         f.setSize(GUIWIDTH+GUITAB+(GUIWIDTH/20), GUIHEIGHT+GUITAB+GUITAB);  
         f.setLayout(null); 
         f.setVisible(true);
-    }
-
-    public Main(int n, int tileWidth, int tileHeight) {
-        switch (n) {
-            case 0:
-                ships[n] = new JButton(new ImageIcon(scaleshipImageH2));
-                ships[n].setBounds(tileWidth*12,tileHeight,tileWidth,tileHeight*2);
-                break;
-            
-            case 1:
-                ships[n] = new JButton(new ImageIcon(scaleshipImageH3));
-                ships[n].setBounds(tileWidth*15,tileHeight,tileWidth,tileHeight*3);
-                break;
-
-            case 2:
-                ships[n] = new JButton(new ImageIcon(scaleshipImageH3));
-                ships[n].setBounds(tileWidth*18,tileHeight,tileWidth,tileHeight*3);
-                break;
-            case 3:
-                ships[n] = new JButton(new ImageIcon(scaleshipImageH4));
-                ships[n].setBounds(tileWidth*27/2,tileHeight*5,tileWidth,tileHeight*4);
-                break;
-            case 4:
-                ships[n] = new JButton(new ImageIcon(scaleshipImageH5));
-                ships[n].setBounds(tileWidth*33/2,tileHeight*5,tileWidth,tileHeight*5);
-                break;
-            default:
-                System.out.println ("Error: h");
-                break;
-        }
-        ships[n].addActionListener(this); //adds click detection
     }
 
     public static void gridActivity() { //grid inputs
@@ -159,7 +160,6 @@ public class Main implements ActionListener {
                     });
                 } 
                 DGrid[x][y].addActionListener(new ActionListener(){ 
-
                     public void actionPerformed(ActionEvent e){
                         if (userSelection > 0) {
                             if (e.getSource() == DGrid[newX][newY]) {
@@ -193,20 +193,6 @@ public class Main implements ActionListener {
             }
         }
     }
-    
-    public void actionPerformed(ActionEvent e){
-        Object src = e.getSource(); 
-        for (int x=0; x<5; x++) {
-            if (src.equals(ships[x])) {
-                System.out.println("User has selected Ship "+(x+1));
-                userSelection = x+1;
-                shipSelection = x;
-                if (userSelection > 2) {
-                    userSelection = x;
-                }
-            } 
-        } 
-    } 
     
     public static void resetButton() {
         rButton = new JButton("Reset");
