@@ -1,13 +1,11 @@
 /* 
 * PROJECT TITLE: Battleships
-* VERSION or DATE: Version 1.6, 21.05.24
+* VERSION or DATE: Version 1.7, 22.05.24
 * AUTHOR: Viraaj Ravji
 * DETAILS:
-    * Added KeyListener
-    * Added rotation of ships (press r to rotate)
-    * Error checking adding ship outside of bounds
-    * Added new images for horizontal ships
-    * Bug fixes
+    * Added error detection for placing ships over ships
+    * Better error checking for horizontal ships
+    * Started a count system for start button (not finished)
 */
 
 /*LIBRARY*/
@@ -34,6 +32,7 @@ public class Main implements KeyListener {
     private static JButton rButton;
     private static JLabel shipLabel;
     private static String shipRotation = "vertical";
+    private static int count = 0;
 
     /*IMAGES*/
     private static ImageIcon shipImageH2 = new ImageIcon("assets/ship_texture_h2.jpg");
@@ -150,8 +149,9 @@ public class Main implements KeyListener {
                                     if (newY+n > 9) {
                                         n = userSelection+1;
                                     } else {
-                                        if (newY+userSelection > 9) {
-                                            colour= Color.red;
+                                        if (newY+userSelection > 9 || DGridData[newX][newY+userSelection] == "ship" || 
+                                        DGridData[newX][newY+userSelection-1] == "ship" || DGridData[newX][newY+userSelection-2] == "ship") { // Checking if it is placed over another ship
+                                            colour=Color.red;
                                         }
                                         DGrid[newX][newY+n].setBackground(colour);
                                     }   
@@ -162,7 +162,8 @@ public class Main implements KeyListener {
                                     if (newX+n > 9) {
                                         n = userSelection+1;     
                                     } else {
-                                        if (newX+userSelection > 9) {
+                                        if (newX+userSelection > 9 || DGridData[newX+userSelection][newY] == "ship" || 
+                                        DGridData[newX+userSelection-1][newY] == "ship" || DGridData[newX+userSelection-2][newY] == "ship") { // Checking if it is placed over another ship
                                             colour= Color.red;
                                         }
                                         DGrid[newX+n][newY].setBackground(colour);
@@ -212,7 +213,7 @@ public class Main implements KeyListener {
                                             System.out.println("Error: userSelection");
                                             break;
                                     } 
-                                } else if (shipRotation.equals("horizontal")) {
+                                } else if (shipRotation.equals("horizontal")) { // Changing image if the ship needs to be horizontal
                                     switch (userSelection) {
                                         case 1: icon = scaleshipImageRH2; break;
                                         case 2: icon = scaleshipImageRH3; break;
@@ -230,11 +231,13 @@ public class Main implements KeyListener {
                                 if (shipRotation.equals("vertical")) {
                                     for (int n=0; n<userSelection+1; n++) {
                                         DGrid[newX][newY+n].setVisible(false);  
+                                        DGridData[newX][newY+n] = "ship";
                                     }
                                     shipLabel.setBounds(DGrid[newX][newY].getX(), DGrid[newX][newY].getY(),tileWidth, tileHeight*(userSelection+1));
                                 } else if (shipRotation.equals("horizontal")) {
                                     for (int n=0; n<userSelection+1; n++) {
                                         DGrid[newX+n][newY].setVisible(false);
+                                        DGridData[newX+n][newY] = "ship";
                                     }
                                     shipLabel.setBounds(DGrid[newX][newY].getX(), DGrid[newX][newY].getY(),tileWidth*(userSelection+1), tileHeight);
                                 }
@@ -243,9 +246,9 @@ public class Main implements KeyListener {
                                 ships[shipSelection].setVisible(false);
                                 userSelection = 0;
                                 resetButton();
-                            }  else if (DGrid[newX][newY].getBackground() != Color.black) { // If ship is placed outside of bounds
-                                System.out.println("Error: Ship placement out of bounds");
-                            }
+                            }   else if (DGrid[newX][newY].getBackground() != Color.black) { // If ship is placed outside of bounds
+                                    System.out.println("Error: Ship placement out of bounds");
+                                }
                         } 
                     }  
                 }); 
@@ -270,12 +273,17 @@ public class Main implements KeyListener {
                         DGrid[x][y].setVisible(true);
                         DGrid[x][y].setBackground(Color.white);
                         DGrid[x][y].setText("-");
-                        rButton.setVisible(false);
+                        DGridData[x][y] = null; // reseting data
                     }
                 }
-                f.remove(shipLabel);
+                rButton.setVisible(false);
+                f.remove(shipLabel);      
             }
         });
+        count++;
+        if (count == 5) {
+            //call start button
+        }
     }
     public Main() {
         //GUI window properties
@@ -319,6 +327,10 @@ public class Main implements KeyListener {
     public void keyReleased(KeyEvent e) { // Typed text
         // I dont need this either
     } 
+
+    public static void startButton() {
+        //start button
+    }
 
     public static void main(String[] args) {  //called when the program is run
         System.out.println("Window Width: "+GUIWIDTH);
