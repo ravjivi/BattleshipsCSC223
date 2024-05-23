@@ -1,11 +1,12 @@
 /* 
 * PROJECT TITLE: Battleships
-* VERSION or DATE: Version 1.7, 22.05.24
+* VERSION or DATE: Version 2, 23.05.24
 * AUTHOR: Viraaj Ravji
 * DETAILS:
-    * Added error detection for placing ships over ships
-    * Better error checking for horizontal ships
-    * Started a count system for start button (not finished)
+    * Finished the first version, placing ships
+    * Added a start button for when all ships are placed
+    * Clears right side of screen for where the opponents grid will be
+    * Added some comments to code, need to still add more
 */
 
 /*LIBRARY*/
@@ -29,10 +30,10 @@ public class Main implements KeyListener {
     private static int tileWidth = GUIWIDTH/20; //tile spacing horizontal
     private static int userSelection;
     private static int shipSelection;
-    private static JButton rButton;
+    private static final JButton rButton = new JButton("Reset");; //reset JButton
     private static JLabel shipLabel;
     private static String shipRotation = "vertical";
-    private static int count = 0;
+    private static final JButton startButton = new JButton("Press to Start"); // start JButton
 
     /*IMAGES*/
     private static ImageIcon shipImageH2 = new ImageIcon("assets/ship_texture_h2.jpg");
@@ -52,6 +53,19 @@ public class Main implements KeyListener {
     private static ImageIcon shipImageRH5 = new ImageIcon("assets/ship_texture_rh5.jpg");
     private static Image scaleshipImageRH5 = shipImageRH5.getImage().getScaledInstance(tileWidth*5, tileHeight,Image.SCALE_DEFAULT);
 
+    public Main() {
+        //GUI window properties
+        f.setSize(GUIWIDTH+GUITAB+(GUIWIDTH/20), GUIHEIGHT+GUITAB+GUITAB);  
+        f.setLayout(null); 
+        f.setVisible(true);
+        f.setFocusTraversalKeysEnabled(false); 
+        f.setFocusable(true);
+        f.addKeyListener(this);
+        for (int x=0; x<ships.length; x++) {
+            ships[x].addKeyListener(this);
+        }
+        
+    }
 
     public static void grid() { //creates the GUI and grid
         /*grid vairables*/
@@ -129,10 +143,6 @@ public class Main implements KeyListener {
             }); 
             f.add(ships[x]); 
         }
-         
-
-
-        
     }
 
     public static void gridActivity() { //grid inputs
@@ -149,10 +159,12 @@ public class Main implements KeyListener {
                                     if (newY+n > 9) {
                                         n = userSelection+1;
                                     } else {
-                                        if (newY+userSelection > 9 || DGridData[newX][newY+userSelection] == "ship" || 
-                                        DGridData[newX][newY+userSelection-1] == "ship" || DGridData[newX][newY+userSelection-2] == "ship") { // Checking if it is placed over another ship
-                                            colour=Color.red;
+                                        for (int z=0; z<userSelection+1; z++) {
+                                            if (newY+userSelection > 9 || DGridData[newX][newY+userSelection-z] == "ship") { // Checking if it is placed over another ship
+                                                colour=Color.red;
+                                            }
                                         }
+                                       
                                         DGrid[newX][newY+n].setBackground(colour);
                                     }   
                                 }   
@@ -162,10 +174,12 @@ public class Main implements KeyListener {
                                     if (newX+n > 9) {
                                         n = userSelection+1;     
                                     } else {
-                                        if (newX+userSelection > 9 || DGridData[newX+userSelection][newY] == "ship" || 
-                                        DGridData[newX+userSelection-1][newY] == "ship" || DGridData[newX+userSelection-2][newY] == "ship") { // Checking if it is placed over another ship
-                                            colour= Color.red;
+                                        for (int z=0; z<userSelection+1; z++) { 
+                                            if (newX+userSelection > 9 || DGridData[newX+userSelection-z][newY] == "ship") { // Checking if it is placed over another ship
+                                                colour= Color.red;
+                                            }
                                         }
+                                        
                                         DGrid[newX+n][newY].setBackground(colour);
                                     }   
                                 }   
@@ -246,6 +260,7 @@ public class Main implements KeyListener {
                                 ships[shipSelection].setVisible(false);
                                 userSelection = 0;
                                 resetButton();
+                                startButton();
                             }   else if (DGrid[newX][newY].getBackground() != Color.black) { // If ship is placed outside of bounds
                                     System.out.println("Error: Ship placement out of bounds");
                                 }
@@ -258,12 +273,11 @@ public class Main implements KeyListener {
     
     public static void resetButton() {
         // Reset button is only visible after 1 or more ship(s) have been placed
-        rButton = new JButton("Reset");
         rButton.setBounds(GUIWIDTH-tileWidth, GUIHEIGHT-tileWidth, tileWidth*2, tileHeight);
         rButton.setVisible(false);
         f.add(rButton);
         rButton.setVisible(true);
-        rButton.addActionListener(new ActionListener() {
+        rButton.addActionListener(new ActionListener() { // Reset button actionListener
             public void actionPerformed(ActionEvent e){ 
                 for (int x=0; x<ships.length; x++) {
                     ships[x].setVisible(true);
@@ -276,40 +290,24 @@ public class Main implements KeyListener {
                         DGridData[x][y] = null; // reseting data
                     }
                 }
-                rButton.setVisible(false);
-                f.remove(shipLabel);      
+                rButton.setVisible(false); //Reset the button to be invisible
+                f.remove(shipLabel);   
+                startButton.setVisible(false);
             }
         });
-        count++;
-        if (count == 5) {
-            //call start button
-        }
     }
-    public Main() {
-        //GUI window properties
-        f.setSize(GUIWIDTH+GUITAB+(GUIWIDTH/20), GUIHEIGHT+GUITAB+GUITAB);  
-        f.setLayout(null); 
-        f.setVisible(true);
-        f.setFocusTraversalKeysEnabled(false); 
-        f.setFocusable(true);
-        f.addKeyListener(this);
-        for (int x=0; x<ships.length; x++) {
-            ships[x].addKeyListener(this);
-        }
-        
-    }
+
     //Implements of the KeyListener
     @Override
     public void keyTyped(KeyEvent e) { // Typed text
-        //I dont need this method but I need to leave it for KeyListner anyways
+        // I dont need this method but I need to leave it for KeyListner anyways
     }
-
     @Override
     public void keyPressed(KeyEvent e) { // When key is pressed
         int keyCode = e.getKeyCode();
         if (keyCode == 82) { // Character 'r'
             System.out.println("r Key pressed");
-            if (shipRotation.equals("vertical")) {
+            if (shipRotation.equals("vertical")) { // Switch between vertical and horizontal rotation
                 shipRotation = "horizontal";
             } else {
                 shipRotation = "vertical";
@@ -317,26 +315,44 @@ public class Main implements KeyListener {
         }
         for (int y=0; y<10; y++) {
             for (int x=0; x<10; x++) {
-                DGrid[x][y].setBackground(Color.white); //reset grid 
+                DGrid[x][y].setBackground(Color.white); // Reset grid 
             }
         }
         System.out.println(shipRotation);
     }
-
     @Override
     public void keyReleased(KeyEvent e) { // Typed text
         // I dont need this either
     } 
 
     public static void startButton() {
-        //start button
+        startButton.setBounds(GUIWIDTH*3/4-tileWidth*2, GUIHEIGHT/2-tileHeight*3, tileWidth*6,tileHeight*6);
+        startButton.setFont(new Font("Arial", Font.PLAIN, 25)); // Using it to make font size larger
+        startButton.setVisible(false); // When button is created it needs to be invisible
+        f.add(startButton); 
+        if (ships[0].isVisible() == false && ships[1].isVisible() == false && ships[2].isVisible() == false
+        && ships[3].isVisible() == false && ships[4].isVisible() == false) { // Condition for when all ships are placed
+            startButton.setVisible(true);
+            startButton.addActionListener(new ActionListener() { // ActionListener of start button
+                public void actionPerformed(ActionEvent e){ 
+                    startGame(); // Calling startGame method 
+                    startButton.setVisible(false);
+                    rButton.setVisible(false);
+                }
+            });
+        }    
     }
 
-    public static void main(String[] args) {  //called when the program is run
+    public static void startGame() {
+        // Calls when the game has started
+        System.out.println("Game Started");
+    }
+
+    public static void main(String[] args) {  // Xalled when the program is run
         System.out.println("Window Width: "+GUIWIDTH);
         System.out.println("Window Height: "+GUIHEIGHT);
-        grid(); //calls the grid method at the start of the program
-        gridActivity();
-        new Main();
+        grid(); // Calls the grid method at the start of the program
+        gridActivity(); // Grid activity is for user cursor hovering and clicks
+        new Main(); // Constructor for Jframe(GUI) and ships
     }
 }  
