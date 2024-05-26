@@ -1,12 +1,13 @@
 /* 
 * PROJECT TITLE: Battleships
-* VERSION or DATE: Version 2, 23.05.24
+* VERSION or DATE: Version 2.1, 27.05.24
 * AUTHOR: Viraaj Ravji
 * DETAILS:
-    * Finished the first version, placing ships
-    * Added a start button for when all ships are placed
-    * Clears right side of screen for where the opponents grid will be
-    * Added some comments to code, need to still add more
+    * Added computer grid and labels
+    * Used Math.random() to create a random algorithm to place ships
+    * Print the computer grid in the console to see where ships are being placed (only temporary)
+    * Added some error checking for ship placement
+    * There is a bug where ships are randomely placed inside each other
 */
 
 /*LIBRARY*/
@@ -22,12 +23,15 @@ public class Main implements KeyListener {
     public static final int GUIWIDTH = GUIHEIGHT*5/2; //width of the GUI
     private static final int GUITAB = 30; //this the tab where the title is written above the GUI screen
     /*CLASS VARIABLES*/
-    private static JFrame f=new JFrame("Battleships"); //creates JFrame, the GUI window
-    private static JButton[][] DGrid = new JButton[10][10];
-    private static String[][] DGridData = new String[10][10]; 
+    private static JFrame f=new JFrame("Battleships"); // Creates JFrame, the GUI window
+    private static JButton[][] uGrid = new JButton[10][10]; // User Grid
+    private static JButton[][] cGrid = new JButton[10][10]; // Computer Grid
+    private static String[][] uGridData = new String[10][10]; 
+    private static String[][] cGridData = new String[10][10]; 
+    //private static int[] shipHitPoints = {2, 3, 3, 4, 5}; For later
     private static JButton[] ships = new JButton[5];
-    private static int tileHeight = GUIHEIGHT/10; //tile spacing vertical
-    private static int tileWidth = GUIWIDTH/20; //tile spacing horizontal
+    private static int tileHeight = GUIHEIGHT/10; // Tile spacing vertical
+    private static int tileWidth = GUIWIDTH/20; // Tile spacing horizontal
     private static int userSelection;
     private static int shipSelection;
     private static final JButton rButton = new JButton("Reset");; //reset JButton
@@ -56,15 +60,14 @@ public class Main implements KeyListener {
     public Main() {
         //GUI window properties
         f.setSize(GUIWIDTH+GUITAB+(GUIWIDTH/20), GUIHEIGHT+GUITAB+GUITAB);  
-        f.setLayout(null); 
-        f.setVisible(true);
-        f.setFocusTraversalKeysEnabled(false); 
+        f.setLayout(null); // Not using layouts because I have 2 grids that are seperated
+        f.setFocusTraversalKeysEnabled(true); 
         f.setFocusable(true);
         f.addKeyListener(this);
         for (int x=0; x<ships.length; x++) {
             ships[x].addKeyListener(this);
         }
-        
+        refreshScreen();
     }
 
     public static void grid() { //creates the GUI and grid
@@ -75,13 +78,13 @@ public class Main implements KeyListener {
         //adding buttons to GUI
         for (int y=0, yPos=0, xPos=GUITAB; y<10; y++) {
             for (int x=0; x<10; x++, xPos+=tileWidth)   {
-                DGrid[x][y]=new JButton("-");
+                uGrid[x][y]=new JButton("-");
                 //Colour and properties of button
-                DGrid[x][y].setBackground(Color.white);
-                DGrid[x][y].setOpaque(true);
-                DGrid[x][y].setBorderPainted(false);
-                DGrid[x][y].setBounds(xPos,yPos,tileWidth,tileHeight);
-                f.add(DGrid[x][y]);   
+                uGrid[x][y].setBackground(Color.white);
+                uGrid[x][y].setOpaque(true);
+                uGrid[x][y].setBorderPainted(false);
+                uGrid[x][y].setBounds(xPos,yPos,tileWidth,tileHeight);
+                f.add(uGrid[x][y]);   
             }
             yPos+=tileHeight; 
             xPos=GUITAB;
@@ -150,7 +153,7 @@ public class Main implements KeyListener {
             for (int x=0; x<10; x++) {
             int newX = x; //Cant use the x from the for loop inside a local method
             int newY = y;
-                DGrid[x][y].addMouseListener(new java.awt.event.MouseAdapter() {
+                uGrid[x][y].addMouseListener(new java.awt.event.MouseAdapter() {
                     public void mouseEntered(MouseEvent evt) {
                         if (userSelection > 0) {
                             Color colour = Color.black;
@@ -160,12 +163,12 @@ public class Main implements KeyListener {
                                         n = userSelection+1;
                                     } else {
                                         for (int z=0; z<userSelection+1; z++) {
-                                            if (newY+userSelection > 9 || DGridData[newX][newY+userSelection-z] == "ship") { // Checking if it is placed over another ship
+                                            if (newY+userSelection > 9 || uGridData[newX][newY+userSelection-z] == "ship") { // Checking if it is placed over another ship
                                                 colour=Color.red;
                                             }
                                         }
                                        
-                                        DGrid[newX][newY+n].setBackground(colour);
+                                        uGrid[newX][newY+n].setBackground(colour);
                                     }   
                                 }   
                             } 
@@ -175,12 +178,12 @@ public class Main implements KeyListener {
                                         n = userSelection+1;     
                                     } else {
                                         for (int z=0; z<userSelection+1; z++) { 
-                                            if (newX+userSelection > 9 || DGridData[newX+userSelection-z][newY] == "ship") { // Checking if it is placed over another ship
+                                            if (newX+userSelection > 9 || uGridData[newX+userSelection-z][newY] == "ship") { // Checking if it is placed over another ship
                                                 colour= Color.red;
                                             }
                                         }
                                         
-                                        DGrid[newX+n][newY].setBackground(colour);
+                                        uGrid[newX+n][newY].setBackground(colour);
                                     }   
                                 }   
                             } 
@@ -193,7 +196,7 @@ public class Main implements KeyListener {
                                     if (newY+n > 9) {
                                         n = userSelection+1;   
                                     } else {
-                                        DGrid[newX][newY+n].setBackground(Color.white);
+                                        uGrid[newX][newY+n].setBackground(Color.white);
                                     }   
                                 } 
                             }
@@ -202,7 +205,7 @@ public class Main implements KeyListener {
                                     if (newX+n > 9) {
                                         n = userSelection+1;   
                                     } else {
-                                        DGrid[newX+n][newY].setBackground(Color.white);
+                                        uGrid[newX+n][newY].setBackground(Color.white);
                                     }   
                                 } 
                             }
@@ -210,10 +213,10 @@ public class Main implements KeyListener {
                     }
                 }); 
  
-                DGrid[x][y].addActionListener(new ActionListener(){ 
+                uGrid[x][y].addActionListener(new ActionListener(){ 
                     public void actionPerformed(ActionEvent e){
                         if (userSelection > 0) {
-                            if (e.getSource() == DGrid[newX][newY] && DGrid[newX][newY].getBackground() == Color.black) {
+                            if (e.getSource() == uGrid[newX][newY] && uGrid[newX][newY].getBackground() == Color.black) {
                                 System.out.println("Button pressed at ("+(newX+1)+", "+(newY+1)+ ") with ship "+userSelection);
                                 System.out.println(userSelection);
                                 Image icon = scaleshipImageH2;
@@ -244,16 +247,16 @@ public class Main implements KeyListener {
                              
                                 if (shipRotation.equals("vertical")) {
                                     for (int n=0; n<userSelection+1; n++) {
-                                        DGrid[newX][newY+n].setVisible(false);  
-                                        DGridData[newX][newY+n] = "ship";
+                                        uGrid[newX][newY+n].setVisible(false);  
+                                        uGridData[newX][newY+n] = "ship";
                                     }
-                                    shipLabel.setBounds(DGrid[newX][newY].getX(), DGrid[newX][newY].getY(),tileWidth, tileHeight*(userSelection+1));
+                                    shipLabel.setBounds(uGrid[newX][newY].getX(), uGrid[newX][newY].getY(),tileWidth, tileHeight*(userSelection+1));
                                 } else if (shipRotation.equals("horizontal")) {
                                     for (int n=0; n<userSelection+1; n++) {
-                                        DGrid[newX+n][newY].setVisible(false);
-                                        DGridData[newX+n][newY] = "ship";
+                                        uGrid[newX+n][newY].setVisible(false);
+                                        uGridData[newX+n][newY] = "ship";
                                     }
-                                    shipLabel.setBounds(DGrid[newX][newY].getX(), DGrid[newX][newY].getY(),tileWidth*(userSelection+1), tileHeight);
+                                    shipLabel.setBounds(uGrid[newX][newY].getX(), uGrid[newX][newY].getY(),tileWidth*(userSelection+1), tileHeight);
                                 }
                                 
                                 f.add(shipLabel);
@@ -261,7 +264,7 @@ public class Main implements KeyListener {
                                 userSelection = 0;
                                 resetButton();
                                 startButton();
-                            }   else if (DGrid[newX][newY].getBackground() != Color.black) { // If ship is placed outside of bounds
+                            }   else if (uGrid[newX][newY].getBackground() != Color.black) { // If ship is placed outside of bounds
                                     System.out.println("Error: Ship placement out of bounds");
                                 }
                         } 
@@ -284,10 +287,10 @@ public class Main implements KeyListener {
                 }              
                 for (int y=0; y<10; y++) {
                     for (int x=0; x<10; x++) {
-                        DGrid[x][y].setVisible(true);
-                        DGrid[x][y].setBackground(Color.white);
-                        DGrid[x][y].setText("-");
-                        DGridData[x][y] = null; // reseting data
+                        uGrid[x][y].setVisible(true);
+                        uGrid[x][y].setBackground(Color.white);
+                        uGrid[x][y].setText("-");
+                        uGridData[x][y] = null; // reseting data
                     }
                 }
                 rButton.setVisible(false); //Reset the button to be invisible
@@ -315,7 +318,7 @@ public class Main implements KeyListener {
         }
         for (int y=0; y<10; y++) {
             for (int x=0; x<10; x++) {
-                DGrid[x][y].setBackground(Color.white); // Reset grid 
+                uGrid[x][y].setBackground(Color.white); // Reset grid 
             }
         }
         System.out.println(shipRotation);
@@ -346,13 +349,90 @@ public class Main implements KeyListener {
     public static void startGame() {
         // Calls when the game has started
         System.out.println("Game Started");
+        String[] alphabetString = {"A", "B", "C", "D", "E", "F", "G", "H", "I", "J"};
+        JLabel[] labels = new JLabel[20];
+        // Adding buttons for computer grid
+        for (int y=0, yPos=0, xPos=GUIWIDTH-tileWidth*9; y<10; y++) {
+            for (int x=0; x<10; x++, xPos+=tileWidth)   {
+                cGrid[x][y]=new JButton("-");
+                //Colour and properties of button
+                cGrid[x][y].setBackground(Color.white);
+                cGrid[x][y].setOpaque(true);
+                cGrid[x][y].setBorderPainted(false);
+                cGrid[x][y].setBounds(xPos,yPos,tileWidth,tileHeight);
+                f.add(cGrid[x][y]);   
+            }
+            yPos+=tileHeight; 
+            xPos=GUIWIDTH-tileWidth*9;
+        }
+        
+        // Adding labels for compiter grid
+        for (int x=0, yPos=0; x<11; x++, yPos+=tileHeight) {
+            if (x<10) {
+                labels[x] = new JLabel(alphabetString[x]); 
+                labels[x].setBounds(GUIWIDTH+tileWidth*6/5,yPos,tileWidth,tileHeight);
+                f.add(labels[x]);
+            } else if (x==10) {
+                for (int y=0, xPos=GUIWIDTH-tileWidth*43/5; y<10; y++, xPos+=tileWidth) { // 43/5 is my 'golden ratio'
+                    labels[y+10] = new JLabel(String.valueOf(y+1)); 
+                    labels[y+10].setBounds(xPos,tileHeight*9+GUITAB+tileHeight/5,tileWidth,tileHeight);
+                    f.add(labels[y+10]);
+                }
+            }
+        }
+        refreshScreen(); // Refresh screen method
     }
 
-    public static void main(String[] args) {  // Xalled when the program is run
+    public static void refreshScreen() { // Refreshes screen when called
+        // Used to fix bug where buttons called after f.setVisible are invisible
+        f.setVisible(false);
+        f.setVisible(true);
+    }
+    public static void computerShip() { // Creates the position of the computer ship
+        String[] rotation = {"vertical", "horizontal"};
+        int[] length = {2, 3, 3, 4, 5};
+        int xPos=0;
+        int yPos=0;
+        for (int n=0; n<length.length; n++) {
+            String r = rotation[(int)Math.floor(Math.random()*2)];
+            if (r.equals("vertical")) {
+                xPos = (int)Math.floor(Math.random()*10);
+                yPos = (int)Math.floor(Math.random()*(10-length[n]));
+                for (int z=0; z<length[n]; z++) {
+                    if (cGridData[xPos][yPos+z] == "ship") {
+                        System.out.println("Ship placement error");
+                    } else {
+                        cGridData[xPos][yPos+z] = "ship";
+                    }
+                }
+               
+            } else {
+                xPos = (int)Math.floor(Math.random()*(10-length[n]));
+                yPos = (int)Math.floor(Math.random()*10);
+                for (int z=0; z<length[n]; z++) {
+                    cGridData[xPos+z][yPos] = "ship";
+                }
+            }
+                 
+        }
+        for (int y=0; y<10; y++) {
+            for (int x=0; x<10; x++) {
+                if (cGridData[x][y] == "ship") {
+                    System.out.print("X ");
+                } else {
+                    System.out.print("O ");
+                }
+            }
+            System.out.println(" ");
+        }
+    }
+
+    public static void main(String[] args) {  // Called when the program is run
         System.out.println("Window Width: "+GUIWIDTH);
         System.out.println("Window Height: "+GUIHEIGHT);
         grid(); // Calls the grid method at the start of the program
         gridActivity(); // Grid activity is for user cursor hovering and clicks
         new Main(); // Constructor for Jframe(GUI) and ships
+        computerShip();
     }
 }  
