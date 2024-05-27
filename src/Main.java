@@ -1,12 +1,12 @@
 /* 
 * PROJECT TITLE: Battleships
-* VERSION or DATE: Version 2.2, 27.05.24
+* VERSION or DATE: Version 2.3, 28.05.24
 * AUTHOR: Viraaj Ravji
 * DETAILS:
-    * Finished computer ship algorithim
-    * Ships should place randomly without being out of bounds or overlapping
-    * Ships also rotate randomly
-    * Added some comments to computer ship method (very little)
+    * Added button register for computer grid
+    * If the tile pressed has a ship, return hit
+    * if not return miss
+    * I am adding return if user has already shot in a postion. Not working yet
 */
 
 /*LIBRARY*/
@@ -217,8 +217,6 @@ public class Main implements KeyListener {
                     public void actionPerformed(ActionEvent e){
                         if (userSelection > 0) {
                             if (e.getSource() == uGrid[newX][newY] && uGrid[newX][newY].getBackground() == Color.black) {
-                                System.out.println("Button pressed at ("+(newX+1)+", "+(newY+1)+ ") with ship "+userSelection);
-                                System.out.println(userSelection);
                                 Image icon = scaleshipImageH2;
                                 if (shipRotation.equals("vertical")) {
                                     switch (userSelection) {
@@ -354,12 +352,19 @@ public class Main implements KeyListener {
         // Adding buttons for computer grid
         for (int y=0, yPos=0, xPos=GUIWIDTH-tileWidth*9; y<10; y++) {
             for (int x=0; x<10; x++, xPos+=tileWidth)   {
+                int xx = x; // I need these because the program dosen't allow methods to send variables from for loops
+                int yy=y;
                 cGrid[x][y]=new JButton("-");
                 //Colour and properties of button
                 cGrid[x][y].setBackground(Color.white);
                 cGrid[x][y].setOpaque(true);
                 cGrid[x][y].setBorderPainted(false);
                 cGrid[x][y].setBounds(xPos,yPos,tileWidth,tileHeight);
+                cGrid[x][y].addActionListener(new ActionListener() { // Action listner for button presses
+                    public void actionPerformed(ActionEvent e){
+                        System.out.println(userShot(xx, yy));
+                    }
+                });
                 f.add(cGrid[x][y]);   
             }
             yPos+=tileHeight; 
@@ -370,7 +375,7 @@ public class Main implements KeyListener {
         for (int x=0, yPos=0; x<11; x++, yPos+=tileHeight) {
             if (x<10) {
                 labels[x] = new JLabel(alphabetString[x]); 
-                labels[x].setBounds(GUIWIDTH+tileWidth*6/5,yPos,tileWidth,tileHeight);
+                labels[x].setBounds(GUIWIDTH+tileWidth,yPos,tileWidth,tileHeight);
                 f.add(labels[x]);
             } else if (x==10) {
                 for (int y=0, xPos=GUIWIDTH-tileWidth*43/5; y<10; y++, xPos+=tileWidth) { // 43/5 is my 'golden ratio'
@@ -444,6 +449,16 @@ public class Main implements KeyListener {
         }
     }
 
+    public static String userShot(int xPos, int yPos) {
+        //System.out.println("Computer grid pressed at: "+xPos+" "+yPos);
+        if (cGridData[xPos][yPos] != "ship" && cGridData[xPos][yPos] != null) {
+            return("repeat");
+        } else if (cGridData[xPos][yPos] != "ship") {
+            return ("miss");
+        } else {
+            return("hit");
+        }
+    }
     public static void main(String[] args) {  // Called when the program is run
         System.out.println("Window Width: "+GUIWIDTH);
         System.out.println("Window Height: "+GUIHEIGHT);
