@@ -1,13 +1,12 @@
 /* 
 * PROJECT TITLE: Battleships
-* VERSION or DATE: Version 2.1, 27.05.24
+* VERSION or DATE: Version 2.2, 27.05.24
 * AUTHOR: Viraaj Ravji
 * DETAILS:
-    * Added computer grid and labels
-    * Used Math.random() to create a random algorithm to place ships
-    * Print the computer grid in the console to see where ships are being placed (only temporary)
-    * Added some error checking for ship placement
-    * There is a bug where ships are randomely placed inside each other
+    * Finished computer ship algorithim
+    * Ships should place randomly without being out of bounds or overlapping
+    * Ships also rotate randomly
+    * Added some comments to computer ship method (very little)
 */
 
 /*LIBRARY*/
@@ -61,7 +60,8 @@ public class Main implements KeyListener {
         //GUI window properties
         f.setSize(GUIWIDTH+GUITAB+(GUIWIDTH/20), GUIHEIGHT+GUITAB+GUITAB);  
         f.setLayout(null); // Not using layouts because I have 2 grids that are seperated
-        f.setFocusTraversalKeysEnabled(true); 
+        f.setFocusTraversalKeysEnabled(true);
+        f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); 
         f.setFocusable(true);
         f.addKeyListener(this);
         for (int x=0; x<ships.length; x++) {
@@ -394,33 +394,50 @@ public class Main implements KeyListener {
         int xPos=0;
         int yPos=0;
         for (int n=0; n<length.length; n++) {
-            String r = rotation[(int)Math.floor(Math.random()*2)];
-            if (r.equals("vertical")) {
-                xPos = (int)Math.floor(Math.random()*10);
-                yPos = (int)Math.floor(Math.random()*(10-length[n]));
+            String r = rotation[(int)Math.floor(Math.random()*2)]; // 0-1
+            if (r.equals("vertical")) { // If rotation is vertical
+                xPos = (int)Math.floor(Math.random()*10); // 0-9
+                yPos = (int)Math.floor(Math.random()*(10-length[n])); // 0-(10-length of ship)
                 for (int z=0; z<length[n]; z++) {
-                    if (cGridData[xPos][yPos+z] == "ship") {
-                        System.out.println("Ship placement error");
-                    } else {
+                    if (cGridData[xPos][yPos+z] != "ship") { // Ship is currently not placed
                         cGridData[xPos][yPos+z] = "ship";
+                    } else { // Ship is currently placed in that location
+                        System.out.println("Error overlap vertical: "+xPos+ ", "+(yPos+z)+", "+n+yPos);
+                        for (int zz=0; zz<z; zz++) { // Remove currently placed tiles for this ship
+                            cGridData[xPos][yPos+zz] = null;
+                        }
+                        cGridData[xPos][yPos+z] = "ship"; // Original position
+                        z=length[n]; //Exit z loop
+                        n-=1; //Re-place this ship
                     }
                 }
                
-            } else {
-                xPos = (int)Math.floor(Math.random()*(10-length[n]));
-                yPos = (int)Math.floor(Math.random()*10);
+            } else { // If rotation is horizontal
+                xPos = (int)Math.floor(Math.random()*(10-length[n])); // 0-(10-length of ship)
+                yPos = (int)Math.floor(Math.random()*10); // 0-9
                 for (int z=0; z<length[n]; z++) {
-                    cGridData[xPos+z][yPos] = "ship";
+                    if (cGridData[xPos+z][yPos] != "ship") { // Ship is currently not placed
+                        cGridData[xPos+z][yPos] = "ship";
+                    } else { // Ship is currently placed in that location
+                        System.out.println("Error overlap horizontal: "+(xPos+z)+ ", "+yPos+", "+n+xPos);
+                        for (int zz=0; zz<z; zz++) { // Remove currently placed tiles for this ship
+                            cGridData[xPos+zz][yPos] = null;
+                        }
+                        cGridData[xPos+z][yPos] = "ship"; // Original position
+                        z=length[n]; //Exit z loop
+                        n-=1; //Re-place this ship
+                    }
                 }
-            }
-                 
+            }      
         }
-        for (int y=0; y<10; y++) {
+        for (int y=0; y<10; y++) { // For Testing
             for (int x=0; x<10; x++) {
                 if (cGridData[x][y] == "ship") {
                     System.out.print("X ");
-                } else {
+                } else if (cGridData[x][y] == "overlap") {
                     System.out.print("O ");
+                } else {
+                    System.out.print(". ");
                 }
             }
             System.out.println(" ");
