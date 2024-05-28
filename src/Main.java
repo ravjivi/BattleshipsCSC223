@@ -1,12 +1,12 @@
 /* 
 * PROJECT TITLE: Battleships
-* VERSION or DATE: Version 2.3, 28.05.24
+* VERSION or DATE: Version 2.4, 29.05.24
 * AUTHOR: Viraaj Ravji
 * DETAILS:
-    * Added button register for computer grid
-    * If the tile pressed has a ship, return hit
-    * if not return miss
-    * I am adding return if user has already shot in a postion. Not working yet
+    * Added missile register
+    * The method userShots will return if you hit miss or repeat a shot
+    * The computer grid colours depending on the hit result
+    * The colours don't look nice, and I am going to change the colour of the button if the entire ship is sunk
 */
 
 /*LIBRARY*/
@@ -26,7 +26,7 @@ public class Main implements KeyListener {
     private static JButton[][] uGrid = new JButton[10][10]; // User Grid
     private static JButton[][] cGrid = new JButton[10][10]; // Computer Grid
     private static String[][] uGridData = new String[10][10]; 
-    private static String[][] cGridData = new String[10][10]; 
+    private static int[][] cGridData = new int[10][10]; // 0-nothing, 1-ship, 2-hit ship, 3-miss
     //private static int[] shipHitPoints = {2, 3, 3, 4, 5}; For later
     private static JButton[] ships = new JButton[5];
     private static int tileHeight = GUIHEIGHT/10; // Tile spacing vertical
@@ -354,6 +354,7 @@ public class Main implements KeyListener {
             for (int x=0; x<10; x++, xPos+=tileWidth)   {
                 int xx = x; // I need these because the program dosen't allow methods to send variables from for loops
                 int yy=y;
+                cGridData[x][y] = 0; // Sets the entire computer grid to notihing, look at top for number reference
                 cGrid[x][y]=new JButton("-");
                 //Colour and properties of button
                 cGrid[x][y].setBackground(Color.white);
@@ -386,6 +387,7 @@ public class Main implements KeyListener {
             }
         }
         refreshScreen(); // Refresh screen method
+        computerShip(); // Places computer ships
     }
 
     public static void refreshScreen() { // Refreshes screen when called
@@ -404,14 +406,14 @@ public class Main implements KeyListener {
                 xPos = (int)Math.floor(Math.random()*10); // 0-9
                 yPos = (int)Math.floor(Math.random()*(10-length[n])); // 0-(10-length of ship)
                 for (int z=0; z<length[n]; z++) {
-                    if (cGridData[xPos][yPos+z] != "ship") { // Ship is currently not placed
-                        cGridData[xPos][yPos+z] = "ship";
+                    if (cGridData[xPos][yPos+z] != 1) { // Ship is currently not placed
+                        cGridData[xPos][yPos+z] = 1;
                     } else { // Ship is currently placed in that location
                         System.out.println("Error overlap vertical: "+xPos+ ", "+(yPos+z)+", "+n+yPos);
                         for (int zz=0; zz<z; zz++) { // Remove currently placed tiles for this ship
-                            cGridData[xPos][yPos+zz] = null;
+                            cGridData[xPos][yPos+zz] = 0;
                         }
-                        cGridData[xPos][yPos+z] = "ship"; // Original position
+                        cGridData[xPos][yPos+z] = 1; // Original position
                         z=length[n]; //Exit z loop
                         n-=1; //Re-place this ship
                     }
@@ -421,14 +423,14 @@ public class Main implements KeyListener {
                 xPos = (int)Math.floor(Math.random()*(10-length[n])); // 0-(10-length of ship)
                 yPos = (int)Math.floor(Math.random()*10); // 0-9
                 for (int z=0; z<length[n]; z++) {
-                    if (cGridData[xPos+z][yPos] != "ship") { // Ship is currently not placed
-                        cGridData[xPos+z][yPos] = "ship";
+                    if (cGridData[xPos+z][yPos] != 1) { // Ship is currently not placed
+                        cGridData[xPos+z][yPos] = 1;
                     } else { // Ship is currently placed in that location
                         System.out.println("Error overlap horizontal: "+(xPos+z)+ ", "+yPos+", "+n+xPos);
                         for (int zz=0; zz<z; zz++) { // Remove currently placed tiles for this ship
-                            cGridData[xPos+zz][yPos] = null;
+                            cGridData[xPos+zz][yPos] = 0;
                         }
-                        cGridData[xPos+z][yPos] = "ship"; // Original position
+                        cGridData[xPos+z][yPos] = 1; // Original position
                         z=length[n]; //Exit z loop
                         n-=1; //Re-place this ship
                     }
@@ -437,10 +439,8 @@ public class Main implements KeyListener {
         }
         for (int y=0; y<10; y++) { // For Testing
             for (int x=0; x<10; x++) {
-                if (cGridData[x][y] == "ship") {
+                if (cGridData[x][y] == 1) {
                     System.out.print("X ");
-                } else if (cGridData[x][y] == "overlap") {
-                    System.out.print("O ");
                 } else {
                     System.out.print(". ");
                 }
@@ -451,13 +451,19 @@ public class Main implements KeyListener {
 
     public static String userShot(int xPos, int yPos) {
         //System.out.println("Computer grid pressed at: "+xPos+" "+yPos);
-        if (cGridData[xPos][yPos] != "ship" && cGridData[xPos][yPos] != null) {
-            return("repeat");
-        } else if (cGridData[xPos][yPos] != "ship") {
-            return ("miss");
-        } else {
-            return("hit");
+        
+        if (cGridData[xPos][yPos] == 2 || cGridData[xPos][yPos] == 3) { //Already shot this position, either hit or miss
+            return ("Already shot here"); 
+        } else if (cGridData[xPos][yPos] == 1) { // A ship is hit
+            cGridData[xPos][yPos] = 2;
+            cGrid[xPos][yPos].setBackground(Color.RED);
+            return ("You hit a Battleship!");
+        } else { // Nothing is hit
+            cGridData[xPos][yPos] = 3;
+            cGrid[xPos][yPos].setBackground(Color.BLACK);
+            return ("Miss! Nothing was hit");
         }
+
     }
     public static void main(String[] args) {  // Called when the program is run
         System.out.println("Window Width: "+GUIWIDTH);
@@ -465,6 +471,5 @@ public class Main implements KeyListener {
         grid(); // Calls the grid method at the start of the program
         gridActivity(); // Grid activity is for user cursor hovering and clicks
         new Main(); // Constructor for Jframe(GUI) and ships
-        computerShip();
     }
 }  
