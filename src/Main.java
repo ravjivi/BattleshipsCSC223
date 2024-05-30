@@ -1,12 +1,12 @@
 /* 
 * PROJECT TITLE: Battleships
-* VERSION or DATE: Version 2.4, 29.05.24
+* VERSION or DATE: Version 3, 30.05.24
 * AUTHOR: Viraaj Ravji
 * DETAILS:
-    * Added missile register
-    * The method userShots will return if you hit miss or repeat a shot
-    * The computer grid colours depending on the hit result
-    * The colours don't look nice, and I am going to change the colour of the button if the entire ship is sunk
+    * Changed cGridData[][] to account for different size ships
+    * Values 1-5 are ships 
+    * Added shipHitPoints array
+    * Array is updated for when ships are hit 
 */
 
 /*LIBRARY*/
@@ -26,8 +26,8 @@ public class Main implements KeyListener {
     private static JButton[][] uGrid = new JButton[10][10]; // User Grid
     private static JButton[][] cGrid = new JButton[10][10]; // Computer Grid
     private static String[][] uGridData = new String[10][10]; 
-    private static int[][] cGridData = new int[10][10]; // 0-nothing, 1-ship, 2-hit ship, 3-miss
-    //private static int[] shipHitPoints = {2, 3, 3, 4, 5}; For later
+    private static int[][] cGridData = new int[10][10]; // 0-nothing, 1-5-ship, 6-hit ship, 7-miss
+    private static int[] shipHitPoints = {2, 3, 3, 4, 5}; 
     private static JButton[] ships = new JButton[5];
     private static int tileHeight = GUIHEIGHT/10; // Tile spacing vertical
     private static int tileWidth = GUIWIDTH/20; // Tile spacing horizontal
@@ -68,6 +68,12 @@ public class Main implements KeyListener {
             ships[x].addKeyListener(this);
         }
         refreshScreen();
+    }
+
+    public static void refreshScreen() { // Refreshes screen when called
+        // Used to fix bug where buttons called after f.setVisible are invisible
+        f.setVisible(false);
+        f.setVisible(true);
     }
 
     public static void grid() { //creates the GUI and grid
@@ -363,7 +369,7 @@ public class Main implements KeyListener {
                 cGrid[x][y].setBounds(xPos,yPos,tileWidth,tileHeight);
                 cGrid[x][y].addActionListener(new ActionListener() { // Action listner for button presses
                     public void actionPerformed(ActionEvent e){
-                        System.out.println(userShot(xx, yy));
+                        System.out.println(userShot(xx, yy)); // Calls for userShot method, which will return hit result
                     }
                 });
                 f.add(cGrid[x][y]);   
@@ -390,57 +396,49 @@ public class Main implements KeyListener {
         computerShip(); // Places computer ships
     }
 
-    public static void refreshScreen() { // Refreshes screen when called
-        // Used to fix bug where buttons called after f.setVisible are invisible
-        f.setVisible(false);
-        f.setVisible(true);
-    }
     public static void computerShip() { // Creates the position of the computer ship
         String[] rotation = {"vertical", "horizontal"};
         int[] length = {2, 3, 3, 4, 5};
         int xPos=0;
         int yPos=0;
         for (int n=0; n<length.length; n++) {
-            String r = rotation[(int)Math.floor(Math.random()*2)]; // 0-1
+            String r = rotation[(int)Math.floor(Math.random()*2)]; // Either 0 or 1
             if (r.equals("vertical")) { // If rotation is vertical
-                xPos = (int)Math.floor(Math.random()*10); // 0-9
-                yPos = (int)Math.floor(Math.random()*(10-length[n])); // 0-(10-length of ship)
+                xPos = (int)Math.floor(Math.random()*10); // 0 to 9
+                yPos = (int)Math.floor(Math.random()*(10-length[n])); // 0 to (10-length of ship)
                 for (int z=0; z<length[n]; z++) {
-                    if (cGridData[xPos][yPos+z] != 1) { // Ship is currently not placed
-                        cGridData[xPos][yPos+z] = 1;
+                    if (cGridData[xPos][yPos+z] > 6 || cGridData[xPos][yPos+z] == 0) { // Ship is currently not placed
+                        cGridData[xPos][yPos+z] = n+1;
                     } else { // Ship is currently placed in that location
                         System.out.println("Error overlap vertical: "+xPos+ ", "+(yPos+z)+", "+n+yPos);
                         for (int zz=0; zz<z; zz++) { // Remove currently placed tiles for this ship
-                            cGridData[xPos][yPos+zz] = 0;
+                            cGridData[xPos][yPos+zz] = 0; // 0 is nothing
                         }
-                        cGridData[xPos][yPos+z] = 1; // Original position
-                        z=length[n]; //Exit z loop
+                        z=length[n]; //Exit z for loop
                         n-=1; //Re-place this ship
                     }
-                }
-               
+                }        
             } else { // If rotation is horizontal
-                xPos = (int)Math.floor(Math.random()*(10-length[n])); // 0-(10-length of ship)
-                yPos = (int)Math.floor(Math.random()*10); // 0-9
+                xPos = (int)Math.floor(Math.random()*(10-length[n])); // 0 to (10-length of ship)
+                yPos = (int)Math.floor(Math.random()*10); // 0 to 9
                 for (int z=0; z<length[n]; z++) {
-                    if (cGridData[xPos+z][yPos] != 1) { // Ship is currently not placed
-                        cGridData[xPos+z][yPos] = 1;
+                    if (cGridData[xPos+z][yPos] > 6 || cGridData[xPos+z][yPos] == 0) { // Ship is currently not placed
+                        cGridData[xPos+z][yPos] = n+1;
                     } else { // Ship is currently placed in that location
                         System.out.println("Error overlap horizontal: "+(xPos+z)+ ", "+yPos+", "+n+xPos);
                         for (int zz=0; zz<z; zz++) { // Remove currently placed tiles for this ship
-                            cGridData[xPos+zz][yPos] = 0;
+                            cGridData[xPos+zz][yPos] = 0; // 0 is nothing
                         }
-                        cGridData[xPos+z][yPos] = 1; // Original position
                         z=length[n]; //Exit z loop
                         n-=1; //Re-place this ship
                     }
                 }
             }      
         }
-        for (int y=0; y<10; y++) { // For Testing
+        for (int y=0; y<10; y++) { // FOR TESTING
             for (int x=0; x<10; x++) {
-                if (cGridData[x][y] == 1) {
-                    System.out.print("X ");
+                if (cGridData[x][y] != 0) {
+                    System.out.print(cGridData[x][y]+" ");
                 } else {
                     System.out.print(". ");
                 }
@@ -450,21 +448,20 @@ public class Main implements KeyListener {
     }
 
     public static String userShot(int xPos, int yPos) {
-        //System.out.println("Computer grid pressed at: "+xPos+" "+yPos);
-        
-        if (cGridData[xPos][yPos] == 2 || cGridData[xPos][yPos] == 3) { //Already shot this position, either hit or miss
+        if (cGridData[xPos][yPos] == 6 || cGridData[xPos][yPos] == 7) { //Already shot this position, either hit or miss
             return ("Already shot here"); 
-        } else if (cGridData[xPos][yPos] == 1) { // A ship is hit
-            cGridData[xPos][yPos] = 2;
+        } else if (cGridData[xPos][yPos] < 6 && cGridData[xPos][yPos] !=0) { // A ship is hit
+            shipHitPoints[cGridData[xPos][yPos]-1]--; //Lower hitpoint of the hit ship by 1
+            cGridData[xPos][yPos] = 6;
             cGrid[xPos][yPos].setBackground(Color.RED);
             return ("You hit a Battleship!");
         } else { // Nothing is hit
-            cGridData[xPos][yPos] = 3;
+            cGridData[xPos][yPos] = 7;
             cGrid[xPos][yPos].setBackground(Color.BLACK);
             return ("Miss! Nothing was hit");
         }
-
     }
+
     public static void main(String[] args) {  // Called when the program is run
         System.out.println("Window Width: "+GUIWIDTH);
         System.out.println("Window Height: "+GUIHEIGHT);
