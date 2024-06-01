@@ -1,12 +1,13 @@
 /* 
 * PROJECT TITLE: Battleships
-* VERSION or DATE: Version 3, 30.05.24
+* VERSION or DATE: Version 3.1, 1.06.24
 * AUTHOR: Viraaj Ravji
 * DETAILS:
-    * Changed cGridData[][] to account for different size ships
-    * Values 1-5 are ships 
-    * Added shipHitPoints array
-    * Array is updated for when ships are hit 
+    * Added a computer shot
+    * After your shot the computer fires back at a random postion
+    * When the computer hits a battleship, the ship shows as hit on your grid
+    * Changed how the ship is placed on the grid (see testing document)
+    * A few old bug fixes + removed rotated images
 */
 
 /*LIBRARY*/
@@ -25,7 +26,7 @@ public class Main implements KeyListener {
     private static JFrame f=new JFrame("Battleships"); // Creates JFrame, the GUI window
     private static JButton[][] uGrid = new JButton[10][10]; // User Grid
     private static JButton[][] cGrid = new JButton[10][10]; // Computer Grid
-    private static String[][] uGridData = new String[10][10]; 
+    private static int[][] uGridData = new int[10][10]; 
     private static int[][] cGridData = new int[10][10]; // 0-nothing, 1-5-ship, 6-hit ship, 7-miss
     private static int[] shipHitPoints = {2, 3, 3, 4, 5}; 
     private static JButton[] ships = new JButton[5];
@@ -34,27 +35,25 @@ public class Main implements KeyListener {
     private static int userSelection;
     private static int shipSelection;
     private static final JButton rButton = new JButton("Reset");; //reset JButton
-    private static JLabel shipLabel;
     private static String shipRotation = "vertical";
     private static final JButton startButton = new JButton("Press to Start"); // start JButton
+    private static int turn = 0;
+
 
     /*IMAGES*/
     private static ImageIcon shipImageH2 = new ImageIcon("assets/ship_texture_h2.jpg");
     private static Image scaleshipImageH2 = shipImageH2.getImage().getScaledInstance(tileWidth, tileHeight*2,Image.SCALE_DEFAULT);
-    private static ImageIcon shipImageRH2 = new ImageIcon("assets/ship_texture_rh2.jpg");
-    private static Image scaleshipImageRH2 = shipImageRH2.getImage().getScaledInstance(tileWidth*2, tileHeight,Image.SCALE_DEFAULT);
     private static ImageIcon shipImageH3 = new ImageIcon("assets/ship_texture_h3.jpg");
     private static Image scaleshipImageH3 = shipImageH3.getImage().getScaledInstance(tileWidth, tileHeight*3,Image.SCALE_DEFAULT);
-    private static ImageIcon shipImageRH3 = new ImageIcon("assets/ship_texture_rh3.jpg");
-    private static Image scaleshipImageRH3 = shipImageRH3.getImage().getScaledInstance(tileWidth*3, tileHeight,Image.SCALE_DEFAULT);
     private static ImageIcon shipImageH4 = new ImageIcon("assets/ship_texture_h4.jpg");
     private static Image scaleshipImageH4 = shipImageH4.getImage().getScaledInstance(tileWidth, tileHeight*4,Image.SCALE_DEFAULT);
-    private static ImageIcon shipImageRH4 = new ImageIcon("assets/ship_texture_rh4.jpg");
-    private static Image scaleshipImageRH4 = shipImageRH4.getImage().getScaledInstance(tileWidth*4, tileHeight,Image.SCALE_DEFAULT);
     private static ImageIcon shipImageH5 = new ImageIcon("assets/ship_texture_h5.jpg");
     private static Image scaleshipImageH5 = shipImageH5.getImage().getScaledInstance(tileWidth, tileHeight*5,Image.SCALE_DEFAULT);
-    private static ImageIcon shipImageRH5 = new ImageIcon("assets/ship_texture_rh5.jpg");
-    private static Image scaleshipImageRH5 = shipImageRH5.getImage().getScaledInstance(tileWidth*5, tileHeight,Image.SCALE_DEFAULT);
+
+    private static ImageIcon shipImage = new ImageIcon("assets/ship_texture.jpg");
+    private static Image scaleshipImage = shipImage.getImage().getScaledInstance(tileWidth, tileHeight,Image.SCALE_DEFAULT);
+    private static ImageIcon shipImageHit = new ImageIcon("assets/ship_texture_hit.jpg");
+    private static Image scaleshipImageHit = shipImageHit.getImage().getScaledInstance(tileWidth, tileHeight,Image.SCALE_DEFAULT);
 
     public Main() {
         //GUI window properties
@@ -110,7 +109,8 @@ public class Main implements KeyListener {
                 }
             }
         }
-        for (int x=0; x<5; x++) {
+        // Adding ships to right of grid
+        for (int x=0; x<5; x++) { 
             switch (x) {
                 case 0:
                     ships[x] = new JButton(new ImageIcon(scaleshipImageH2));
@@ -169,7 +169,8 @@ public class Main implements KeyListener {
                                         n = userSelection+1;
                                     } else {
                                         for (int z=0; z<userSelection+1; z++) {
-                                            if (newY+userSelection > 9 || uGridData[newX][newY+userSelection-z] == "ship") { // Checking if it is placed over another ship
+                                            if (newY+userSelection > 9 || uGridData[newX][newY+userSelection-z] < 6 
+                                            && uGridData[newX][newY+userSelection-z] != 0) { // Checking if it is placed over another ship
                                                 colour=Color.red;
                                             }
                                         }
@@ -184,7 +185,8 @@ public class Main implements KeyListener {
                                         n = userSelection+1;     
                                     } else {
                                         for (int z=0; z<userSelection+1; z++) { 
-                                            if (newX+userSelection > 9 || uGridData[newX+userSelection-z][newY] == "ship") { // Checking if it is placed over another ship
+                                            if (newX+userSelection > 9 || uGridData[newX+userSelection-z][newY] < 6 
+                                                && uGridData[newX+userSelection-z][newY] != 0) { // Checking if it is placed over another ship
                                                 colour= Color.red;
                                             }
                                         }
@@ -221,57 +223,30 @@ public class Main implements KeyListener {
  
                 uGrid[x][y].addActionListener(new ActionListener(){ 
                     public void actionPerformed(ActionEvent e){
-                        if (userSelection > 0) {
-                            if (e.getSource() == uGrid[newX][newY] && uGrid[newX][newY].getBackground() == Color.black) {
-                                Image icon = scaleshipImageH2;
-                                if (shipRotation.equals("vertical")) {
-                                    switch (userSelection) {
-                                        case 1: icon = scaleshipImageH2; break;
-                                        case 2: icon = scaleshipImageH3; break;
-                                        case 3: icon = scaleshipImageH4; break;
-                                        case 4: icon = scaleshipImageH5; break;
-                                        default:
-                                            System.out.println("Error: userSelection");
-                                            break;
-                                    } 
-                                } else if (shipRotation.equals("horizontal")) { // Changing image if the ship needs to be horizontal
-                                    switch (userSelection) {
-                                        case 1: icon = scaleshipImageRH2; break;
-                                        case 2: icon = scaleshipImageRH3; break;
-                                        case 3: icon = scaleshipImageRH4; break;
-                                        case 4: icon = scaleshipImageRH5; break;
-                                        default:
-                                            System.out.println("Error: userSelection");
-                                            break;
-                                    } 
+                        if (userSelection > 0) {                            
+                            if (shipRotation.equals("vertical")) {
+                                for (int n=0; n<userSelection+1; n++) {
+                                    uGrid[newX][newY+n].setText("");
+                                    uGrid[newX][newY+n].setIcon(new ImageIcon(scaleshipImage)); 
+                                    uGridData[newX][newY+n] = shipSelection+1;
                                 }
-                                
-                                shipLabel = new JLabel();
-                                shipLabel = new JLabel(new ImageIcon(icon));    
-                             
-                                if (shipRotation.equals("vertical")) {
-                                    for (int n=0; n<userSelection+1; n++) {
-                                        uGrid[newX][newY+n].setVisible(false);  
-                                        uGridData[newX][newY+n] = "ship";
-                                    }
-                                    shipLabel.setBounds(uGrid[newX][newY].getX(), uGrid[newX][newY].getY(),tileWidth, tileHeight*(userSelection+1));
-                                } else if (shipRotation.equals("horizontal")) {
-                                    for (int n=0; n<userSelection+1; n++) {
-                                        uGrid[newX+n][newY].setVisible(false);
-                                        uGridData[newX+n][newY] = "ship";
-                                    }
-                                    shipLabel.setBounds(uGrid[newX][newY].getX(), uGrid[newX][newY].getY(),tileWidth*(userSelection+1), tileHeight);
+                                //shipLabel.setBounds(uGrid[newX][newY].getX(), uGrid[newX][newY].getY(),tileWidth, tileHeight*(userSelection+1));
+                            } else if (shipRotation.equals("horizontal")) {
+                                for (int n=0; n<userSelection+1; n++) {
+                                    uGrid[newX+n][newY].setText("");
+                                    uGrid[newX+n][newY].setIcon(new ImageIcon(scaleshipImage));
+                                    uGridData[newX+n][newY] = shipSelection+1;
                                 }
-                                
-                                f.add(shipLabel);
-                                ships[shipSelection].setVisible(false);
-                                userSelection = 0;
-                                resetButton();
-                                startButton();
-                            }   else if (uGrid[newX][newY].getBackground() != Color.black) { // If ship is placed outside of bounds
-                                    System.out.println("Error: Ship placement out of bounds");
-                                }
-                        } 
+                                //shipLabel.setBounds(uGrid[newX][newY].getX(), uGrid[newX][newY].getY(),tileWidth*(userSelection+1), tileHeight);
+                            }
+                            ships[shipSelection].setVisible(false);
+                            userSelection = 0;
+                            resetButton();
+                            startButton();
+                        } else if (uGrid[newX][newY].getBackground() != Color.black) { // If ship is placed outside of bounds
+                            System.out.println("Error: Ship placement out of bounds");
+                        }
+                        
                     }  
                 }); 
             }
@@ -294,11 +269,11 @@ public class Main implements KeyListener {
                         uGrid[x][y].setVisible(true);
                         uGrid[x][y].setBackground(Color.white);
                         uGrid[x][y].setText("-");
-                        uGridData[x][y] = null; // reseting data
+                        uGrid[x][y].setIcon(null);
+                        uGridData[x][y] = 0; // reseting data
                     }
                 }
                 rButton.setVisible(false); //Reset the button to be invisible
-                f.remove(shipLabel);   
                 startButton.setVisible(false);
             }
         });
@@ -370,6 +345,9 @@ public class Main implements KeyListener {
                 cGrid[x][y].addActionListener(new ActionListener() { // Action listner for button presses
                     public void actionPerformed(ActionEvent e){
                         System.out.println(userShot(xx, yy)); // Calls for userShot method, which will return hit result
+                        if (turn%2 == 1) {
+                            computerShot();
+                        }
                     }
                 });
                 f.add(cGrid[x][y]);   
@@ -448,18 +426,40 @@ public class Main implements KeyListener {
     }
 
     public static String userShot(int xPos, int yPos) {
-        if (cGridData[xPos][yPos] == 6 || cGridData[xPos][yPos] == 7) { //Already shot this position, either hit or miss
-            return ("Already shot here"); 
+        String text;
+        if (cGridData[xPos][yPos] >= 6) { //Already shot this position, either hit or miss
+            text = "Already shot here";
         } else if (cGridData[xPos][yPos] < 6 && cGridData[xPos][yPos] !=0) { // A ship is hit
             shipHitPoints[cGridData[xPos][yPos]-1]--; //Lower hitpoint of the hit ship by 1
             cGridData[xPos][yPos] = 6;
             cGrid[xPos][yPos].setBackground(Color.RED);
-            return ("You hit a Battleship!");
+            turn++;
+            text = "You hit a Battleship!";
         } else { // Nothing is hit
             cGridData[xPos][yPos] = 7;
             cGrid[xPos][yPos].setBackground(Color.BLACK);
-            return ("Miss! Nothing was hit");
+            turn++;
+            text = "Miss! Nothing was hit";
         }
+        return (text);
+    }
+
+    public static void computerShot() {
+        int xPos = (int)Math.floor(Math.random()*10); // 0 to 9
+        int yPos = (int)Math.floor(Math.random()*10); // 0 to 9  
+
+        if (uGridData[xPos][yPos] >= 6) { //Already shot this position, either hit or miss
+            System.out.println("Error: Already shot here");
+            computerShot(); // Recall method
+        } else if (uGridData[xPos][yPos] < 6 && uGridData[xPos][yPos] != 0) {
+            uGrid[xPos][yPos].setIcon(new ImageIcon(scaleshipImageHit));
+            System.out.println("Opponent has hit a Battleship!");
+            uGridData[xPos][yPos] = 6;
+        } else { // Nothing is hit
+            uGridData[xPos][yPos] = 7;
+            System.out.println("Opponent missed! Nothing was hit"); 
+        }
+        turn++;
     }
 
     public static void main(String[] args) {  // Called when the program is run
