@@ -1,13 +1,11 @@
 /* 
 * PROJECT TITLE: Battleships
-* VERSION or DATE: Version 3.1, 1.06.24
+* VERSION or DATE: Version 3.2, 3.06.24
 * AUTHOR: Viraaj Ravji
 * DETAILS:
-    * Added a computer shot
-    * After your shot the computer fires back at a random postion
-    * When the computer hits a battleship, the ship shows as hit on your grid
-    * Changed how the ship is placed on the grid (see testing document)
-    * A few old bug fixes + removed rotated images
+    * Changes to computer firing
+    * Started algorithm for computer firing but is currently commented out
+    * Updates u ship hitpoints when computer hits a ship
 */
 
 /*LIBRARY*/
@@ -26,9 +24,10 @@ public class Main implements KeyListener {
     private static JFrame f=new JFrame("Battleships"); // Creates JFrame, the GUI window
     private static JButton[][] uGrid = new JButton[10][10]; // User Grid
     private static JButton[][] cGrid = new JButton[10][10]; // Computer Grid
-    private static int[][] uGridData = new int[10][10]; 
+    private static int[][] uGridData = new int[10][10]; // 0-nothing, 1-5-ship, 6-hit ship, 7-miss
     private static int[][] cGridData = new int[10][10]; // 0-nothing, 1-5-ship, 6-hit ship, 7-miss
-    private static int[] shipHitPoints = {2, 3, 3, 4, 5}; 
+    private static int[] uShipHitPoints = {2, 3, 3, 4, 5}; 
+    private static int[] cShipHitPoints = {2, 3, 3, 4, 5}; 
     private static JButton[] ships = new JButton[5];
     private static int tileHeight = GUIHEIGHT/10; // Tile spacing vertical
     private static int tileWidth = GUIWIDTH/20; // Tile spacing horizontal
@@ -38,6 +37,8 @@ public class Main implements KeyListener {
     private static String shipRotation = "vertical";
     private static final JButton startButton = new JButton("Press to Start"); // start JButton
     private static int turn = 0;
+    private static int lastX = -1;
+    private static int lastY = -1;
 
 
     /*IMAGES*/
@@ -344,9 +345,14 @@ public class Main implements KeyListener {
                 cGrid[x][y].setBounds(xPos,yPos,tileWidth,tileHeight);
                 cGrid[x][y].addActionListener(new ActionListener() { // Action listner for button presses
                     public void actionPerformed(ActionEvent e){
-                        System.out.println(userShot(xx, yy)); // Calls for userShot method, which will return hit result
-                        if (turn%2 == 1) {
-                            computerShot();
+                        if (turn%2 == 0) {
+                            System.out.println(userShot(xx, yy)); // Calls for userShot method, which will return hit result
+                        } 
+                        if (turn%2 == 1) { 
+                            System.out.println(computerShot());
+                            while (turn%2 == 1) { //
+                                computerShot();
+                            }
                         }
                     }
                 });
@@ -430,7 +436,7 @@ public class Main implements KeyListener {
         if (cGridData[xPos][yPos] >= 6) { //Already shot this position, either hit or miss
             text = "Already shot here";
         } else if (cGridData[xPos][yPos] < 6 && cGridData[xPos][yPos] !=0) { // A ship is hit
-            shipHitPoints[cGridData[xPos][yPos]-1]--; //Lower hitpoint of the hit ship by 1
+            cShipHitPoints[cGridData[xPos][yPos]-1]--; // Lower hitpoint of the hit computer ship by 1
             cGridData[xPos][yPos] = 6;
             cGrid[xPos][yPos].setBackground(Color.RED);
             turn++;
@@ -444,22 +450,81 @@ public class Main implements KeyListener {
         return (text);
     }
 
-    public static void computerShot() {
+    public static String computerShot() {
+        String text;
         int xPos = (int)Math.floor(Math.random()*10); // 0 to 9
-        int yPos = (int)Math.floor(Math.random()*10); // 0 to 9  
+        int yPos = (int)Math.floor(Math.random()*10); // 0 to 9
 
+        /*if (lastX != -1 && lastY != -1) { // If last shot was a hit
+            int n;
+            if (lastX == 0) {
+                n = (int)Math.floor(Math.random()*3); // 0 - 2 
+            } else if (lastX == 9) {
+                n = (int)Math.floor(Math.random()*3)+1; // 1 - 3 
+            } else if (lastY == 0) {
+                int[] list = {0, 1, 3};
+                n = list[(int)Math.floor(Math.random()*3)]; // 0, 1, or 3 
+            } else if (lastY == 9) {
+                int[] list = {0, 2, 3};
+                n = list[(int)Math.floor(Math.random()*3)]; // 0, 2, or 3 
+            } else if (lastX == 0 && lastY == 0) {
+                n = (int)Math.floor(Math.random()*2); // 0 - 1 
+            } else if (lastX == 0 && lastY == 9) {
+                int[] list = {0, 2};
+                n = list[(int)Math.floor(Math.random()*2)]; // 0 or 2
+            } else if (lastX == 9 && lastY == 0) {
+                int[] list = {1, 3};
+                n = list[(int)Math.floor(Math.random()*2)]; // 0 or 2
+            } else if (lastX == 9 && lastY == 9) {
+                n = (int)Math.floor(Math.random()*2)+2; // 2 or 3
+            } else { // Between (1-8, 1-8)
+                n = (int)Math.floor(Math.random()*4); // 0 - 3
+            }
+            switch (n) {
+                case 0:
+                    xPos = lastX + 1;
+                    yPos = lastY; 
+                    break;
+                case 1:
+                    xPos = lastX;
+                    yPos = lastY + 1;  
+                    break;
+                case 2:
+                    xPos = lastX;
+                    yPos = lastY - 1;
+                    break; 
+                case 3:
+                    xPos = lastX - 1;
+                    yPos = lastY;
+                    break;
+                default:
+                    System.out.println("Error: "+n);
+            }
+            System.out.println(xPos);
+            System.out.println(yPos);
+        } */
+        
         if (uGridData[xPos][yPos] >= 6) { //Already shot this position, either hit or miss
-            System.out.println("Error: Already shot here");
-            computerShot(); // Recall method
+            text = "Error: Already shot here";
         } else if (uGridData[xPos][yPos] < 6 && uGridData[xPos][yPos] != 0) {
             uGrid[xPos][yPos].setIcon(new ImageIcon(scaleshipImageHit));
-            System.out.println("Opponent has hit a Battleship!");
+            text = "Opponent has hit a Battleship!";
+            uShipHitPoints[(uGridData[xPos][yPos]-1)]--; // Lower hitpoint of the hit user ship by 1
+            lastX = xPos;
+            lastY = yPos;
+            /*if (uShipHitPoints[uGridData[xPos][yPos]-1] == 0) {
+                lastX = -1;
+                lastY = -1;
+            }*/
             uGridData[xPos][yPos] = 6;
+            turn++;
         } else { // Nothing is hit
+            uGrid[xPos][yPos].setBackground(Color.black);
             uGridData[xPos][yPos] = 7;
-            System.out.println("Opponent missed! Nothing was hit"); 
+            text = "Opponent missed! Nothing was hit";
+            turn++;
         }
-        turn++;
+        return (text);
     }
 
     public static void main(String[] args) {  // Called when the program is run
