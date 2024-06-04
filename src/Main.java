@@ -1,9 +1,9 @@
 /* 
 * PROJECT TITLE: Battleships
-* VERSION or DATE: Version 3.3, 5.06.24
+* VERSION or DATE: Version 3.4, 5.06.24
 * AUTHOR: Viraaj Ravji
 * DETAILS:
-    * Added JLabels to show where the user shot
+    * Fixes to ship rotation and placement
 */
 
 /*LIBRARY*/
@@ -35,8 +35,8 @@ public class Main implements KeyListener {
     private static String shipRotation = "vertical";
     private static final JButton startButton = new JButton("Press to Start"); // start JButton
     private static int turn = 0;
-    private static int lastX = -1;
-    private static int lastY = -1;
+    //private static int lastX = -1;
+    //private static int lastY = -1;
 
 
     /*IMAGES*/
@@ -64,6 +64,11 @@ public class Main implements KeyListener {
         f.addKeyListener(this);
         for (int x=0; x<ships.length; x++) {
             ships[x].addKeyListener(this);
+        }
+        for (int y=0; y<10; y++) {
+            for (int x=0; x<10; x++) {
+                uGrid[x][y].addKeyListener(this);
+            }
         }
         refreshScreen();
     }
@@ -222,21 +227,19 @@ public class Main implements KeyListener {
  
                 uGrid[x][y].addActionListener(new ActionListener(){ 
                     public void actionPerformed(ActionEvent e){
-                        if (userSelection > 0) {                            
+                        if (userSelection > 0 && uGrid[newX][newY].getBackground() == Color.black) { // If ship selected and in valid placement                    
                             if (shipRotation.equals("vertical")) {
                                 for (int n=0; n<userSelection+1; n++) {
                                     uGrid[newX][newY+n].setText("");
                                     uGrid[newX][newY+n].setIcon(new ImageIcon(scaleshipImage)); 
                                     uGridData[newX][newY+n] = shipSelection+1;
                                 }
-                                //shipLabel.setBounds(uGrid[newX][newY].getX(), uGrid[newX][newY].getY(),tileWidth, tileHeight*(userSelection+1));
                             } else if (shipRotation.equals("horizontal")) {
                                 for (int n=0; n<userSelection+1; n++) {
                                     uGrid[newX+n][newY].setText("");
                                     uGrid[newX+n][newY].setIcon(new ImageIcon(scaleshipImage));
                                     uGridData[newX+n][newY] = shipSelection+1;
                                 }
-                                //shipLabel.setBounds(uGrid[newX][newY].getX(), uGrid[newX][newY].getY(),tileWidth*(userSelection+1), tileHeight);
                             }
                             ships[shipSelection].setVisible(false);
                             userSelection = 0;
@@ -244,8 +247,7 @@ public class Main implements KeyListener {
                             startButton();
                         } else if (uGrid[newX][newY].getBackground() != Color.black) { // If ship is placed outside of bounds
                             System.out.println("Error: Ship placement out of bounds");
-                        }
-                        
+                        }                        
                     }  
                 }); 
             }
@@ -299,7 +301,6 @@ public class Main implements KeyListener {
                 uGrid[x][y].setBackground(Color.white); // Reset grid 
             }
         }
-        System.out.println(shipRotation);
     }
     @Override
     public void keyReleased(KeyEvent e) { // Typed text
@@ -406,7 +407,7 @@ public class Main implements KeyListener {
                         z=length[n]; //Exit z for loop
                         n-=1; //Re-place this ship
                     }
-                }        
+                }     
             } else { // If rotation is horizontal
                 xPos = (int)Math.floor(Math.random()*(10-length[n])); // 0 to (10-length of ship)
                 yPos = (int)Math.floor(Math.random()*10); // 0 to 9
@@ -515,8 +516,8 @@ public class Main implements KeyListener {
             uGrid[xPos][yPos].setIcon(new ImageIcon(scaleshipImageHit));
             text = "Opponent has hit a Battleship!";
             uShipHitPoints[(uGridData[xPos][yPos]-1)]--; // Lower hitpoint of the hit user ship by 1
-            lastX = xPos;
-            lastY = yPos;
+            //lastX = xPos;
+            //lastY = yPos;
             /*if (uShipHitPoints[uGridData[xPos][yPos]-1] == 0) {
                 lastX = -1;
                 lastY = -1;
