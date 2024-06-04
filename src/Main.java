@@ -1,11 +1,9 @@
 /* 
 * PROJECT TITLE: Battleships
-* VERSION or DATE: Version 3.2, 3.06.24
+* VERSION or DATE: Version 3.3, 5.06.24
 * AUTHOR: Viraaj Ravji
 * DETAILS:
-    * Changes to computer firing
-    * Started algorithm for computer firing but is currently commented out
-    * Updates u ship hitpoints when computer hits a ship
+    * Added JLabels to show where the user shot
 */
 
 /*LIBRARY*/
@@ -58,7 +56,7 @@ public class Main implements KeyListener {
 
     public Main() {
         //GUI window properties
-        f.setSize(GUIWIDTH+GUITAB+(GUIWIDTH/20), GUIHEIGHT+GUITAB+GUITAB);  
+        f.setSize(GUIWIDTH+GUITAB*3, GUIHEIGHT+GUITAB*2);  
         f.setLayout(null); // Not using layouts because I have 2 grids that are seperated
         f.setFocusTraversalKeysEnabled(true);
         f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); 
@@ -329,8 +327,10 @@ public class Main implements KeyListener {
     public static void startGame() {
         // Calls when the game has started
         System.out.println("Game Started");
+        f.setSize(GUIWIDTH+GUITAB*3, GUIHEIGHT+GUITAB*3);  
         String[] alphabetString = {"A", "B", "C", "D", "E", "F", "G", "H", "I", "J"};
         JLabel[] labels = new JLabel[20];
+        JLabel screenText = new JLabel("",JLabel.CENTER); // Centres the text inside the JLabel
         // Adding buttons for computer grid
         for (int y=0, yPos=0, xPos=GUIWIDTH-tileWidth*9; y<10; y++) {
             for (int x=0; x<10; x++, xPos+=tileWidth)   {
@@ -345,9 +345,14 @@ public class Main implements KeyListener {
                 cGrid[x][y].setBounds(xPos,yPos,tileWidth,tileHeight);
                 cGrid[x][y].addActionListener(new ActionListener() { // Action listner for button presses
                     public void actionPerformed(ActionEvent e){
+                        screenText.setBounds(0,GUIHEIGHT+GUITAB/2,GUIWIDTH+GUITAB*3,tileHeight);
+                        f.add(screenText);
+                        refreshScreen();
                         if (turn%2 == 0) {
-                            System.out.println(userShot(xx, yy)); // Calls for userShot method, which will return hit result
-                        } 
+                            String text = userShot(xx, yy); // Calls for userShot method, which will return hit result
+                            screenText.setText(text);
+                                
+                        }
                         if (turn%2 == 1) { 
                             System.out.println(computerShot());
                             while (turn%2 == 1) { //
@@ -506,7 +511,7 @@ public class Main implements KeyListener {
         
         if (uGridData[xPos][yPos] >= 6) { //Already shot this position, either hit or miss
             text = "Error: Already shot here";
-        } else if (uGridData[xPos][yPos] < 6 && uGridData[xPos][yPos] != 0) {
+        } else if (uGridData[xPos][yPos] < 6 && uGridData[xPos][yPos] != 0) { // Hit
             uGrid[xPos][yPos].setIcon(new ImageIcon(scaleshipImageHit));
             text = "Opponent has hit a Battleship!";
             uShipHitPoints[(uGridData[xPos][yPos]-1)]--; // Lower hitpoint of the hit user ship by 1
@@ -528,8 +533,6 @@ public class Main implements KeyListener {
     }
 
     public static void main(String[] args) {  // Called when the program is run
-        System.out.println("Window Width: "+GUIWIDTH);
-        System.out.println("Window Height: "+GUIHEIGHT);
         grid(); // Calls the grid method at the start of the program
         gridActivity(); // Grid activity is for user cursor hovering and clicks
         new Main(); // Constructor for Jframe(GUI) and ships
