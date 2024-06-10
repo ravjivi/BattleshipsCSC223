@@ -1,9 +1,10 @@
 /* 
 * PROJECT TITLE: Battleships
-* VERSION or DATE: Version 3.4, 5.06.24
+* VERSION or DATE: Version 3.5, 1.06.24
 * AUTHOR: Viraaj Ravji
 * DETAILS:
-    * Fixes to ship rotation and placement
+    * Bug fixes
+    * Basic win checker
 */
 
 /*LIBRARY*/
@@ -35,6 +36,7 @@ public class Main implements KeyListener {
     private static String shipRotation = "vertical";
     private static final JButton startButton = new JButton("Press to Start"); // start JButton
     private static int turn = 0;
+    private static  Boolean clickable = true; // Is the gui clickable
     //private static int lastX = -1;
     //private static int lastY = -1;
 
@@ -140,7 +142,7 @@ public class Main implements KeyListener {
                     System.out.println ("Error: h"); break;
             }
             ships[x].addActionListener(new ActionListener(){  
-                public void actionPerformed(ActionEvent e){  
+                public void actionPerformed(ActionEvent e){ 
                     Object src = e.getSource(); 
                     for (int x=0; x<5; x++) {
                         if (src.equals(ships[x])) {
@@ -227,26 +229,28 @@ public class Main implements KeyListener {
  
                 uGrid[x][y].addActionListener(new ActionListener(){ 
                     public void actionPerformed(ActionEvent e){
-                        if (userSelection > 0 && uGrid[newX][newY].getBackground() == Color.black) { // If ship selected and in valid placement                    
-                            if (shipRotation.equals("vertical")) {
-                                for (int n=0; n<userSelection+1; n++) {
-                                    uGrid[newX][newY+n].setText("");
-                                    uGrid[newX][newY+n].setIcon(new ImageIcon(scaleshipImage)); 
-                                    uGridData[newX][newY+n] = shipSelection+1;
+                        if (clickable == true) {
+                            if (userSelection > 0 && uGrid[newX][newY].getBackground() == Color.black) { // If ship selected and in valid placement                    
+                                if (shipRotation.equals("vertical")) {
+                                    for (int n=0; n<userSelection+1; n++) {
+                                        uGrid[newX][newY+n].setText("");
+                                        uGrid[newX][newY+n].setIcon(new ImageIcon(scaleshipImage)); 
+                                        uGridData[newX][newY+n] = shipSelection+1;
+                                    }
+                                } else if (shipRotation.equals("horizontal")) {
+                                    for (int n=0; n<userSelection+1; n++) {
+                                        uGrid[newX+n][newY].setText("");
+                                        uGrid[newX+n][newY].setIcon(new ImageIcon(scaleshipImage));
+                                        uGridData[newX+n][newY] = shipSelection+1;
+                                    }
                                 }
-                            } else if (shipRotation.equals("horizontal")) {
-                                for (int n=0; n<userSelection+1; n++) {
-                                    uGrid[newX+n][newY].setText("");
-                                    uGrid[newX+n][newY].setIcon(new ImageIcon(scaleshipImage));
-                                    uGridData[newX+n][newY] = shipSelection+1;
-                                }
-                            }
-                            ships[shipSelection].setVisible(false);
-                            userSelection = 0;
-                            resetButton();
-                            startButton();
-                        } else if (uGrid[newX][newY].getBackground() != Color.black) { // If ship is placed outside of bounds
-                            System.out.println("Error: Ship placement out of bounds");
+                                ships[shipSelection].setVisible(false);
+                                userSelection = 0;
+                                resetButton();
+                                startButton();
+                            } else if (uGrid[newX][newY].getBackground() != Color.black) { // If ship is placed outside of bounds
+                                System.out.println("Error: Ship placement out of bounds");
+                            } 
                         }                        
                     }  
                 }); 
@@ -346,20 +350,32 @@ public class Main implements KeyListener {
                 cGrid[x][y].setBounds(xPos,yPos,tileWidth,tileHeight);
                 cGrid[x][y].addActionListener(new ActionListener() { // Action listner for button presses
                     public void actionPerformed(ActionEvent e){
-                        screenText.setBounds(0,GUIHEIGHT+GUITAB/2,GUIWIDTH+GUITAB*3,tileHeight);
-                        f.add(screenText);
-                        refreshScreen();
-                        if (turn%2 == 0) {
-                            String text = userShot(xx, yy); // Calls for userShot method, which will return hit result
-                            screenText.setText(text);
-                                
-                        }
-                        if (turn%2 == 1) { 
-                            System.out.println(computerShot());
-                            while (turn%2 == 1) { //
-                                computerShot();
+                        if (clickable == true) {
+                            screenText.setBounds(0,GUIHEIGHT+GUITAB/2,GUIWIDTH+GUITAB*3,tileHeight);
+                            if (turn == 0) { // Add screen Text if it is the first turn
+                                f.add(screenText);
+                                refreshScreen();
+                            }
+                            if (turn%2 == 0) {
+                                String text = userShot(xx, yy); // Calls for userShot method, which will return hit result
+                                screenText.setText(text);
+                                    
+                            } 
+                            if (turn%2 == 1) { 
+                                while (turn%2 == 1) { //
+                                    String text = computerShot(); // Calls for userShot method, which will return hit result
+                                    screenText.setText(text);
+                                }
+                            }
+                            if (winChecker() == 1) {
+                                System.out.println("Game over, computer wins");
+                                clickable = false;
+                            } else if (winChecker() == 2) {
+                                System.out.println("Game over, user wins");
+                                clickable = false;
                             }
                         }
+                        
                     }
                 });
                 f.add(cGrid[x][y]);   
@@ -531,6 +547,19 @@ public class Main implements KeyListener {
             turn++;
         }
         return (text);
+    }
+
+    public static int winChecker() {
+        if (uShipHitPoints[0] == 0 && uShipHitPoints[1] == 0 && uShipHitPoints[2] == 0 &&
+        uShipHitPoints[3] == 0 && uShipHitPoints[4] == 0) {
+            return(1);
+        } else if (cShipHitPoints[0] == 0 && cShipHitPoints[1] == 0 && cShipHitPoints[2] == 0 &&
+        cShipHitPoints[3] == 0 && cShipHitPoints[4] == 0) {
+            return (2);
+        } else {
+            return (0);
+        }
+        
     }
 
     public static void main(String[] args) {  // Called when the program is run
