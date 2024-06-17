@@ -1,17 +1,14 @@
 /* 
 * PROJECT TITLE: Battleships
-* VERSION or DATE: Version 4.1, 16.06.24
+* VERSION or DATE: Version 4.2, 16.06.24
 * AUTHOR: Viraaj Ravji
 * DETAILS:
-    * Added text for user shot
-    * Text reveals itself with a timer
-    * Need to add text for opponent shot
+    * Updated winchecker
 */
 
 /*LIBRARY*/
 import javax.swing.*;
 import javax.swing.border.LineBorder;
-
 import java.awt.*; 
 import java.awt.event.*;
 
@@ -246,6 +243,7 @@ public class Main implements KeyListener {
                             } 
                         }     
                     }
+
                     public void mouseExited(MouseEvent evt) {
                         if (userSelection > 0) {
                             if (shipRotation.equals("vertical")) {
@@ -417,21 +415,8 @@ public class Main implements KeyListener {
                                 refreshScreen();
                             }
                             String text = userShot(xx, yy); // Calls for userShot method, which will return hit result
-                            screenTimer(text, screenText);
-                            turn++;
-                            while (turn%2 == 1) { //
-                                text = computerShot(); // Calls for userShot method, which will return hit result
-                                System.out.println(text);
-                            }
-                            if (winChecker() == 1) {
-                                System.out.println("Game over, computer wins");
-                                clickable = false;
-                            } else if (winChecker() == 2) {
-                                System.out.println("Game over, user wins");
-                                clickable = false;
-                            }
-                        }
-                        
+                            screenTimer(text, screenText, false);               
+                        }   
                     }
                 });
                 computerGrid.add(cGrid[x][y]);   
@@ -460,7 +445,7 @@ public class Main implements KeyListener {
         int xPos=0;
         int yPos=0;
         for (int n=0; n<length.length; n++) {
-            String r = rotation[(int)Math.floor(Math.random()*2)]; // Either 0 or 1
+            String r = rotation[(int)Math.floor(Math.random()*2)]; // Either 0 or 1 cGri
             if (r.equals("vertical")) { // If rotation is vertical
                 xPos = (int)Math.floor(Math.random()*10); // 0 to 9
                 yPos = (int)Math.floor(Math.random()*(10-length[n])); // 0 to (10-length of ship)
@@ -514,10 +499,12 @@ public class Main implements KeyListener {
             cGridData[xPos][yPos] = 6;
             cGrid[xPos][yPos].setBackground(Color.RED);
             text = "You hit a Battleship!";
+            turn++;
         } else { // Nothing is hit
             cGridData[xPos][yPos] = 7;
             cGrid[xPos][yPos].setBackground(Color.BLACK);
             text = "Miss! Nothing was hit";
+            turn++;
         }
         return (text);
     }
@@ -599,21 +586,21 @@ public class Main implements KeyListener {
         return (text);
     }
 
-    public static int winChecker() {
+    public static void winChecker(JLabel screenText) {
         if (uShipHitPoints[0] == 0 && uShipHitPoints[1] == 0 && uShipHitPoints[2] == 0 &&
         uShipHitPoints[3] == 0 && uShipHitPoints[4] == 0) {
-            return(1);
+            System.out.println("Game over, computer wins");
+            screenTimer("Game over, computer wins", screenText, true);
         } else if (cShipHitPoints[0] == 0 && cShipHitPoints[1] == 0 && cShipHitPoints[2] == 0 &&
         cShipHitPoints[3] == 0 && cShipHitPoints[4] == 0) {
-            return (2);
-        } else {
-            return (0);
-        }
-        
+            System.out.println("Game over, user wins");
+            screenTimer("Game over, user wins", screenText, true);
+
+        }   
     }
 
-    public static void screenTimer(String text, JLabel screenText) {
-        Timer timer = new Timer(50, new ActionListener() {
+    public static void screenTimer(String text, JLabel screenText, boolean gameOver) {
+        Timer timer = new Timer(30, new ActionListener() { //Timer runs every 30ms
             int index = 0;
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -625,7 +612,24 @@ public class Main implements KeyListener {
                 } else {
                     // Stop the timer once all characters are revealed
                     ((Timer)e.getSource()).stop();
-                    clickable = true;
+                    if (turn%2 == 1) { //If it is end of user's turn
+                        String ntext = null;
+                        while (turn%2 == 1 && gameOver==false) { //
+                            ntext = computerShot(); // Calls for userShot method, which will return hit result
+                        }
+                        try {
+                            Thread.sleep(500); // Pause for 0.5s
+                            screenTimer(ntext, screenText, false);
+                        } catch (InterruptedException ie) {                          
+                            Thread.currentThread().interrupt(); 
+                        } 
+                        
+                    } else if (gameOver == true) {
+                        clickable = false;
+                    } else {
+                        clickable = true;
+                        winChecker(screenText);
+                    }  
                 }
             }
         });
