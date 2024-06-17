@@ -1,11 +1,11 @@
 /* 
 * PROJECT TITLE: Battleships
-* VERSION or DATE: Version 4, 16.06.24
+* VERSION or DATE: Version 4.1, 16.06.24
 * AUTHOR: Viraaj Ravji
 * DETAILS:
-    * Completely changed grid and sections of GUI to use JPanels
-    * Window can be resized and everything should scale
-    * Game has exactly same functionality as last commit
+    * Added text for user shot
+    * Text reveals itself with a timer
+    * Need to add text for opponent shot
 */
 
 /*LIBRARY*/
@@ -119,6 +119,7 @@ public class Main implements KeyListener {
             for (int x=0; x<10; x++)   {
                 uGrid[x][y]=new JButton("-");
                 //Colour and properties of button
+                uGrid[x][y].setMargin(new Insets(0,0,0,0));
                 uGrid[x][y].setBackground(Color.white);
                 uGrid[x][y].setOpaque(true);
                 uGrid[x][y].setBorderPainted(false);
@@ -415,16 +416,12 @@ public class Main implements KeyListener {
                                 textPanel.add(screenText);
                                 refreshScreen();
                             }
-                            if (turn%2 == 0) {
-                                String text = userShot(xx, yy); // Calls for userShot method, which will return hit result
-                                screenText.setText(text);
-                                    
-                            } 
-                            if (turn%2 == 1) { 
-                                while (turn%2 == 1) { //
-                                    String text = computerShot(); // Calls for userShot method, which will return hit result
-                                    screenText.setText(text);
-                                }
+                            String text = userShot(xx, yy); // Calls for userShot method, which will return hit result
+                            screenTimer(text, screenText);
+                            turn++;
+                            while (turn%2 == 1) { //
+                                text = computerShot(); // Calls for userShot method, which will return hit result
+                                System.out.println(text);
                             }
                             if (winChecker() == 1) {
                                 System.out.println("Game over, computer wins");
@@ -516,12 +513,10 @@ public class Main implements KeyListener {
             cShipHitPoints[cGridData[xPos][yPos]-1]--; // Lower hitpoint of the hit computer ship by 1
             cGridData[xPos][yPos] = 6;
             cGrid[xPos][yPos].setBackground(Color.RED);
-            turn++;
             text = "You hit a Battleship!";
         } else { // Nothing is hit
             cGridData[xPos][yPos] = 7;
             cGrid[xPos][yPos].setBackground(Color.BLACK);
-            turn++;
             text = "Miss! Nothing was hit";
         }
         return (text);
@@ -615,6 +610,26 @@ public class Main implements KeyListener {
             return (0);
         }
         
+    }
+
+    public static void screenTimer(String text, JLabel screenText) {
+        Timer timer = new Timer(50, new ActionListener() {
+            int index = 0;
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (index < text.length()) {
+                    clickable = false;
+                    // Reveal one more character
+                    screenText.setText(text.substring(0, index + 1)); // Starts from 0 and adds each character up to the int of index
+                    index++;
+                } else {
+                    // Stop the timer once all characters are revealed
+                    ((Timer)e.getSource()).stop();
+                    clickable = true;
+                }
+            }
+        });
+        timer.start();
     }
 
     public static void main(String[] args) {  // Called when the program is run
