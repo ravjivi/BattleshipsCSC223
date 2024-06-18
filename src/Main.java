@@ -1,9 +1,10 @@
 /* 
 * PROJECT TITLE: Battleships
-* VERSION or DATE: Version 4.2, 16.06.24
+* VERSION or DATE: Version 4.3, 19.06.24
 * AUTHOR: Viraaj Ravji
 * DETAILS:
-    * Updated winchecker
+    * Added to computer shooting algorithim
+    * Still lots of errors when ships are placed on edges
 */
 
 /*LIBRARY*/
@@ -40,8 +41,12 @@ public class Main implements KeyListener {
     private static final JButton startButton = new JButton("Press to Start"); // start JButton
     private static int turn = 0;
     private static  Boolean clickable = true; // Is the gui clickable
-    //private static int lastX = -1;
-    //private static int lastY = -1;
+    
+    private static int lastX = -1;
+    private static int lastY = -1;
+    private static String hitDirection = null;
+    private static int originalX;
+    private static int originalY;
 
     /*IMAGES*/
     private static ImageIcon shipImageH2 = new ImageIcon("assets/ship_texture_h2.jpg");
@@ -514,31 +519,40 @@ public class Main implements KeyListener {
         int xPos = (int)Math.floor(Math.random()*10); // 0 to 9
         int yPos = (int)Math.floor(Math.random()*10); // 0 to 9
 
-        /*if (lastX != -1 && lastY != -1) { // If last shot was a hit
+        if (lastX != -1 && lastY != -1) { // If last shot was a hit
             int n;
-            if (lastX == 0) {
-                n = (int)Math.floor(Math.random()*3); // 0 - 2 
-            } else if (lastX == 9) {
-                n = (int)Math.floor(Math.random()*3)+1; // 1 - 3 
-            } else if (lastY == 0) {
-                int[] list = {0, 1, 3};
-                n = list[(int)Math.floor(Math.random()*3)]; // 0, 1, or 3 
-            } else if (lastY == 9) {
-                int[] list = {0, 2, 3};
-                n = list[(int)Math.floor(Math.random()*3)]; // 0, 2, or 3 
-            } else if (lastX == 0 && lastY == 0) {
-                n = (int)Math.floor(Math.random()*2); // 0 - 1 
-            } else if (lastX == 0 && lastY == 9) {
-                int[] list = {0, 2};
-                n = list[(int)Math.floor(Math.random()*2)]; // 0 or 2
-            } else if (lastX == 9 && lastY == 0) {
-                int[] list = {1, 3};
-                n = list[(int)Math.floor(Math.random()*2)]; // 0 or 2
-            } else if (lastX == 9 && lastY == 9) {
-                n = (int)Math.floor(Math.random()*2)+2; // 2 or 3
-            } else { // Between (1-8, 1-8)
-                n = (int)Math.floor(Math.random()*4); // 0 - 3
+            if (hitDirection == "vertical") {
+                int[] list = {1, 2};
+                n = list[(int)Math.floor(Math.random()*2)]; // 1 or 2
+            } else if (hitDirection == "horizontal") {
+                int[] list = {0, 3};
+                n = list[(int)Math.floor(Math.random()*2)]; // 0 or 3
+            } else { // Hit direction is null (unknown)
+                if (lastX == 0) {
+                    n = (int)Math.floor(Math.random()*3); // 0 - 2 
+                } else if (lastX == 9) {
+                    n = (int)Math.floor(Math.random()*3)+1; // 1 - 3 
+                } else if (lastY == 0) {
+                    int[] list = {0, 1, 3};
+                    n = list[(int)Math.floor(Math.random()*3)]; // 0, 1, or 3 
+                } else if (lastY == 9) {
+                    int[] list = {0, 2, 3};
+                    n = list[(int)Math.floor(Math.random()*3)]; // 0, 2, or 3 
+                } else if (lastX == 0 && lastY == 0) {
+                    n = (int)Math.floor(Math.random()*2); // 0 - 1 
+                } else if (lastX == 0 && lastY == 9) {
+                    int[] list = {0, 2};
+                    n = list[(int)Math.floor(Math.random()*2)]; // 0 or 2
+                } else if (lastX == 9 && lastY == 0) {
+                    int[] list = {1, 3};
+                    n = list[(int)Math.floor(Math.random()*2)]; // 1 or 3
+                } else if (lastX == 9 && lastY == 9) {
+                    n = (int)Math.floor(Math.random()*2)+2; // 2 or 3
+                } else { // Between (1-8, 1-8)
+                    n = (int)Math.floor(Math.random()*4); // 0 - 3
+                }
             }
+       
             switch (n) {
                 case 0:
                     xPos = lastX + 1;
@@ -561,7 +575,7 @@ public class Main implements KeyListener {
             }
             System.out.println(xPos);
             System.out.println(yPos);
-        } */
+        } 
         
         if (uGridData[xPos][yPos] >= 6) { //Already shot this position, either hit or miss
             text = "Error: Already shot here";
@@ -569,18 +583,50 @@ public class Main implements KeyListener {
             uGrid[xPos][yPos].setIcon(new ImageIcon(shipImageHit.getImage().getScaledInstance(uGrid[xPos][yPos].getWidth(), uGrid[xPos][yPos].getHeight(),Image.SCALE_DEFAULT)));
             text = "Opponent has hit a Battleship!";
             uShipHitPoints[(uGridData[xPos][yPos]-1)]--; // Lower hitpoint of the hit user ship by 1
-            //lastX = xPos;
-            //lastY = yPos;
-            /*if (uShipHitPoints[uGridData[xPos][yPos]-1] == 0) {
+            if (lastX > -1 || lastY > -1) {
+                if (hitDirection == null) {
+                    if (lastX < xPos || lastX > xPos) {
+                        hitDirection = "horizontal";                 
+                    } else if (lastY < yPos || lastY > yPos) {
+                        hitDirection = "vertical"; 
+                    }
+                    System.out.println(hitDirection);
+                }   
+            }
+            lastX = xPos;
+            lastY = yPos;
+            if (uShipHitPoints[uGridData[xPos][yPos]-1] == 0) { // Reset last variables if the ship is destroyed
                 lastX = -1;
                 lastY = -1;
-            }*/
+                hitDirection = null;
+            }
+            if (hitDirection == null) {
+                originalX = xPos;
+                originalY = yPos;
+            }
             uGridData[xPos][yPos] = 6;
             turn++;
         } else { // Nothing is hit
             uGrid[xPos][yPos].setBackground(Color.black);
             uGridData[xPos][yPos] = 7;
             text = "Opponent missed! Nothing was hit";
+            if (lastX > -1 || lastY > -1) {
+                if (hitDirection == null) {
+                    if (xPos-2 >= 0 && xPos+2 <= 10 && yPos-2 >= 0 && yPos+2 <= 10) {
+                        if (lastX < xPos && uGridData[xPos-2][yPos] == 7|| lastX > xPos && uGridData[xPos+2][yPos] == 7) {
+                            hitDirection = "vertical";
+                        } else if (lastY < yPos && uGridData[xPos][yPos-2] == 7 || lastY > yPos && uGridData[xPos][yPos+2] == 7) {
+                            hitDirection = "horizontal";
+                        }
+                        System.out.println(hitDirection);
+                    } else {
+                        System.out.println("ERROR");
+                    }
+                } else {
+                    lastX = originalX;
+                    lastY = originalY;   
+                }      
+            }
             turn++;
         }
         return (text);
@@ -619,11 +665,10 @@ public class Main implements KeyListener {
                         }
                         try {
                             Thread.sleep(500); // Pause for 0.5s
-                            screenTimer(ntext, screenText, false);
+                            screenTimer(ntext, screenText, false);    
                         } catch (InterruptedException ie) {                          
                             Thread.currentThread().interrupt(); 
                         } 
-                        
                     } else if (gameOver == true) {
                         clickable = false;
                     } else {
