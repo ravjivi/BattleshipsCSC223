@@ -1,12 +1,10 @@
 /* 
 * PROJECT TITLE: Battleships
-* VERSION or DATE: Version 5, 24.06.24
+* VERSION or DATE: Version 5.1, 25.06.24
 * AUTHOR: Viraaj Ravji
 * DETAILS:
-    * Computer shooring is mostly finished
-    * There is still a error when the ships are all placed next to each other
-    * The shooting algorithim isn't super efficient but I can easily fix later
-    * Game is finished besides couple bugs. I would be happy for this to be my MVP
+    * Computer shooting is finished
+    * Text is added to the start screen to show users what to do
 */
 
 /*LIBRARY*/
@@ -201,10 +199,15 @@ public class Main implements KeyListener {
         GUI.add(computerPanel);
         f.setLayout(new BorderLayout());
         f.add(GUI, BorderLayout.CENTER);
-        gridActivity(computerPanel, shipPanel, buttonPanel); // Grid activity is for user cursor hovering and clicks
+
+        JLabel screenText = new JLabel("Click a ship to select. Press r to rotate ship. Click on grid to place ship",JLabel.CENTER); // Centres the text inside the JLabel
+        screenText.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 13));
+        textPanel.add(screenText);
+        f.add(textPanel, BorderLayout.SOUTH);
+        gridActivity(computerPanel, shipPanel, buttonPanel, screenText); // Grid activity is for user cursor hovering and clicks
     }
 
-    public static void gridActivity(JPanel computerPanel, JPanel shiPanel, JPanel buttonPanel) { //grid inputs
+    public static void gridActivity(JPanel computerPanel, JPanel shiPanel, JPanel buttonPanel, JLabel screenText) { //grid inputs
         for (int y=0; y<10; y++) {
             for (int x=0; x<10; x++) {
             int newX = x; //Cant use the x from the for loop inside a local method
@@ -302,7 +305,8 @@ public class Main implements KeyListener {
                                 ships[shipSelection].setVisible(false);
                                 userSelection = 0;
                                 resetButton(buttonPanel);
-                                startButton(computerPanel, shiPanel, buttonPanel);
+                                startButton(computerPanel, shiPanel, buttonPanel, screenText);
+                                screenText.setText("Place all 5 ships to start");
                                 shipRotation = "vertical";
                             } else if (uGrid[newX][newY].getBackground() != Color.black) { // If ship is placed outside of bounds
                                 System.out.println("Error: Ship placement out of bounds");
@@ -368,7 +372,7 @@ public class Main implements KeyListener {
         // I dont need this either
     } 
 
-    public static void startButton(JPanel computerPanel, JPanel shipPanel, JPanel buttonPanel) {
+    public static void startButton(JPanel computerPanel, JPanel shipPanel, JPanel buttonPanel, JLabel screenText) {
         startButton.setVisible(false); // When button is created it needs to be invisible
         buttonPanel.add(startButton); 
         if (ships[0].isVisible() == false && ships[1].isVisible() == false && ships[2].isVisible() == false
@@ -377,6 +381,7 @@ public class Main implements KeyListener {
             startButton.addActionListener(new ActionListener() { // ActionListener of start button
                 public void actionPerformed(ActionEvent e){ 
                     startGame(computerPanel); // Calling startGame method 
+                    textPanel.remove(screenText);
                     computerPanel.remove(buttonPanel);
                     computerPanel.remove(shipPanel);
                     startButton.setVisible(false);
@@ -408,6 +413,7 @@ public class Main implements KeyListener {
                 cGridData[x][y] = 0; // Sets the entire computer grid to notihing, look at top for number reference
                 cGrid[x][y]=new JButton("-");
                 //Colour and properties of button
+                cGrid[x][y].setMargin(new Insets(0,0,0,0));
                 cGrid[x][y].setBackground(Color.white);
                 cGrid[x][y].setOpaque(true);
                 cGrid[x][y].setBorderPainted(false);
@@ -416,8 +422,6 @@ public class Main implements KeyListener {
                     public void actionPerformed(ActionEvent e){
                         if (clickable == true) {
                             if (turn == 0) { // Add screen Text if it is the first turn
-                                f.setSize(f.getWidth(), f.getHeight()+GUITAB);  // Increase size of GUI to allow for text below
-                                f.add(textPanel, BorderLayout.SOUTH);
                                 textPanel.add(screenText);
                                 refreshScreen();
                             }
@@ -600,7 +604,12 @@ public class Main implements KeyListener {
             text = "Error: Already shot here";
             if (lastY > 0 && lastY  < 9) {
                 if (hitDirection == "vertical" && uGridData[xPos][lastY+1] >= 6 && uGridData[lastX][lastY-1] >= 6) {
-                    lastY = originalY;
+                    if (lastY == originalY) {
+                        System.out.println("Error loop");
+                        hitDirection = "horizontal";
+                    } else {
+                        lastY = originalY;
+                    }
                 } 
             } else if (lastY  == 0) {
                 if (hitDirection == "vertical" && uGridData[lastX][lastY+1] >= 6) {
@@ -610,10 +619,16 @@ public class Main implements KeyListener {
                 if (hitDirection == "vertical" && uGridData[lastX][lastY-1] >= 6) {
                     lastY = originalY;
                 }
-            }
-            
+            } 
+           
             if (lastX > 0 && lastX < 9) {
                 if (hitDirection == "horizontal" && uGridData[lastX+1][lastY] >= 6 && uGridData[lastX-1][lastY] >= 6) {
+                    if (lastX == originalX) {
+                        System.out.println("Error loop");
+                        hitDirection = "vertical";
+                    } else {
+                        lastX = originalX;
+                    }
                     lastX = originalX;
                 }
             } else if (lastX == 0) {
@@ -624,8 +639,8 @@ public class Main implements KeyListener {
                 if (hitDirection == "horizontal" && uGridData[lastX-1][lastY] >= 6) {
                     lastX = originalX;
                 }
-            }
-            
+            } 
+                   
         } else if (uGridData[xPos][yPos] < 6 && uGridData[xPos][yPos] != 0) { // Hit
             uGrid[xPos][yPos].setIcon(new ImageIcon(shipImageHit.getImage().getScaledInstance(uGrid[xPos][yPos].getWidth(), uGrid[xPos][yPos].getHeight(),Image.SCALE_DEFAULT)));
             text = "Opponent has hit a Battleship!";
@@ -722,8 +737,37 @@ public class Main implements KeyListener {
                     System.out.println(hitDirection);
                 } else {
                     // Reset shooting postion to original to shoot in other direction
-                    lastX = originalX;
-                    lastY = originalY;
+                    for (int n=0; n<4; n++) {
+                        if (hitDirection == "vertical") {
+                            if (lastY+n < 10) {
+                                if (uGridData[lastX][lastY+n] <= 5) {
+                                    n = 4;
+                                }
+                            } else if (lastY-n > -1) {
+                                if (uGridData[lastX][lastY-n] <= 5) {
+                                    n = 4;
+                                }
+                            }
+                        } else if (hitDirection == "horizontal") {
+                            if (lastX+n < 10) {
+                                if (uGridData[lastX+n][lastY] <= 5) {
+                                    n = 4;
+                                }
+                            } else if (lastX-n > -1) {
+                                if (uGridData[lastX-n][lastY] <= 5) {
+                                    n = 4;
+                                }
+                            }
+                        }
+                        if (n == 4) {
+                            lastX = originalX;
+                            lastY = originalY;
+                        } else if (n == 3) {
+                            System.out.println("Error algorithim placement");
+                            lastX = -1;
+                            lastY = -1;
+                        }
+                    }
                 }                               
             }
             turn++;
