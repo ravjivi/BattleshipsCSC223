@@ -1,10 +1,9 @@
 /* 
 * PROJECT TITLE: Battleships
-* VERSION or DATE: Version 5.1, 25.06.24
+* VERSION or DATE: Version 5.2, 26.06.24
 * AUTHOR: Viraaj Ravji
 * DETAILS:
-    * Computer shooting is finished
-    * Text is added to the start screen to show users what to do
+    * Adding comments
 */
 
 /*LIBRARY*/
@@ -15,10 +14,10 @@ import java.awt.event.*;
 
 public class Main implements KeyListener {    
      /*CLASS VARIABLES*/
-    public static Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+    private static Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
     // Takes the height of the screen and calculates size of the GUI
-    public static final int GUIHEIGHT = (int)screenSize.getHeight() / 2; 
-    public static final int GUIWIDTH = GUIHEIGHT*5/2; // Width of the GUI proportional to the width of the scrreen
+    private static final int GUIHEIGHT = (int)screenSize.getHeight() / 2; 
+    private static final int GUIWIDTH = GUIHEIGHT*5/2; // Width of the GUI proportional to the width of the scrreen
     
     private static JFrame f=new JFrame("Battleships"); // Creates JFrame, the GUI window
     private static JPanel GUI = new JPanel(new GridLayout(1,2,20, 0)); // 1 row,2 columns,20px horizontal gap,0px vertical gap
@@ -40,7 +39,7 @@ public class Main implements KeyListener {
     private static String shipRotation = "vertical";
     private static final JButton startButton = new JButton("Press to Start"); // start JButton
     private static int turn = 0;
-    private static  Boolean clickable = true; // Is the gui clickable
+    private static Boolean clickable = true; // Is the gui clickable
     
     private static int lastX = -1;
     private static int lastY = -1;
@@ -61,8 +60,15 @@ public class Main implements KeyListener {
     private static ImageIcon shipImage = new ImageIcon("assets/ship_texture.jpg");
     private static ImageIcon shipImageHit = new ImageIcon("assets/ship_texture_hit.jpg");
 
+    /*
+     * This is my JFrame constructor
+     * It is used to setup all the properies for my GUI
+     * I also use this to add keyListeners to grid buttons and ship buttons. When these are selsected you can press keys like 'r' because it is a non static method
+     * It also runs a method when the GUI is resized. It updates the size of the images and GUITAB, which is the space between the JPanels inside the GUI layout
+     */
+    
     public Main() {
-        //GUI window properties for JFrame
+        // GUI window properties for JFrame
         f.setSize(GUIWIDTH+GUITAB*3, GUIHEIGHT+GUITAB*2);  
         f.setFocusTraversalKeysEnabled(true);
         f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); 
@@ -70,7 +76,7 @@ public class Main implements KeyListener {
         f.addKeyListener(this);
         for (int y=0; y<10; y++) {
             for (int x=0; x<10; x++) {
-                if (x<5 && y==0) { //For all ship buttons add key listener
+                if (x<5 && y==0) { // For all ship buttons add key listener
                     ships[x].addKeyListener(this);
                 }
                 uGrid[x][y].addKeyListener(this);
@@ -95,15 +101,26 @@ public class Main implements KeyListener {
         });
         refreshScreen();    
     }
-
-    public static void refreshScreen() { // Refreshes screen when called
-        // Used to fix bug where buttons called after f.setVisible are invisible
+    /*
+     * Callled when new objects are added to the GUI like a JLabel
+     * Used to fix bug where buttons called after f.setVisible are invisible
+     */
+    public static void refreshScreen() { 
         f.setVisible(false);
         f.setVisible(true);
     }
 
-    public static void grid() { //creates the GUI and grid
-        /*grid vairables*/
+    /*
+     * Creates the starting GUI for when the game is run
+     * Creates all the JPanels visible before the game is started
+     * JPanels allow the GUI to scale nicely i.e JButtons are smaller when the gui is downscaled
+     * User's grid are 100 buttons alligned in a 10x10 format
+     * JLabels are added to the left and bottom of the grid to show the coordinates of the grid
+     * JPanel on the right are the ships placed with a gridBagLayout
+     * Finally the panel on the bottom is for the text
+     */
+    public static void startGUI() { 
+        // Initial GUI variables
         String[] alphabetString = {"A", "B", "C", "D", "E", "F", "G", "H", "I", "J"};
         JLabel[] labels = new JLabel[20];
         JPanel userPanel = new JPanel(new BorderLayout());
@@ -116,7 +133,7 @@ public class Main implements KeyListener {
         JPanel shipPanel = new JPanel(new GridBagLayout());
         JPanel buttonPanel = new JPanel();
        
-        //adding buttons to GUI
+        // Adding buttons to GUI
         for (int y=0; y<10; y++) {
             for (int x=0; x<10; x++)   {
                 uGrid[x][y]=new JButton("-");
@@ -128,7 +145,7 @@ public class Main implements KeyListener {
                 userGrid.add(uGrid[x][y]);   
             }
         }
-        // Add sub-panels to user and computer panels
+        // Add sub-panels to user(left) and computer panels(right)
         userPanel.add(labelsLeft, BorderLayout.WEST);
         userPanel.add(userGrid, BorderLayout.CENTER);
         userPanel.add(labelsBottom, BorderLayout.SOUTH);
@@ -148,11 +165,11 @@ public class Main implements KeyListener {
             }
         }
 
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.fill = GridBagConstraints.NONE;
-        gbc.insets = new Insets(5, 5, 5, 5);
-        gbc.weightx = 0;
-        gbc.weighty = 0;
+        GridBagConstraints shipsGBC = new GridBagConstraints();
+        shipsGBC.fill = GridBagConstraints.NONE;
+        shipsGBC.insets = new Insets(5, 5, 5, 5);
+        shipsGBC.weightx = 0;
+        shipsGBC.weighty = 0;
         // Adding ships to right of grid
         for (int x=0; x<5; x++) { 
             switch (x) {
@@ -191,9 +208,9 @@ public class Main implements KeyListener {
                 }  
             });  
             ships[x].setBorder(new LineBorder(Color.BLACK));
-            gbc.gridx = x; // Column 0
-            gbc.gridy = 0; // Row 0
-            shipPanel.add(ships[x], gbc);
+            shipsGBC.gridx = x; // Column 0
+            shipsGBC.gridy = 0; // Row 0
+            shipPanel.add(ships[x], shipsGBC);
         } 
         GUI.add(userPanel);
         GUI.add(computerPanel);
@@ -825,7 +842,7 @@ public class Main implements KeyListener {
     }
 
     public static void main(String[] args) {  // Called when the program is run
-        grid(); // Calls the grid method at the start of the program
+        startGUI(); // Calls the grid method at the start of the program
         new Main(); // Constructor for Jframe(GUI) and ships
     }
 }  
