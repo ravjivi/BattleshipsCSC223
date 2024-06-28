@@ -1,9 +1,10 @@
 /* 
 * PROJECT TITLE: Battleships
-* VERSION or DATE: Version 5.2, 26.06.24
+* VERSION or DATE: Version 5.3, 28.06.24
 * AUTHOR: Viraaj Ravji
 * DETAILS:
-    * Adding comments
+    * Changes to shooting algorithm
+    * Added more comments
 */
 
 /*LIBRARY*/
@@ -41,11 +42,14 @@ public class Main implements KeyListener {
     private static int turn = 0;
     private static Boolean clickable = true; // Is the gui clickable
     
+    // Computer algorithm
     private static int lastX = -1;
     private static int lastY = -1;
     private static String hitDirection = null;
     private static int originalX;
     private static int originalY;
+    private static int loopCount = 0;
+
 
     /*IMAGES*/
     private static ImageIcon shipImageH2 = new ImageIcon("assets/ship_texture_h2.jpg");
@@ -128,11 +132,11 @@ public class Main implements KeyListener {
         JPanel labelsLeft = new JPanel(new GridLayout(10, 1));
         JPanel labelsBottom = new JPanel(new GridLayout(1, 10));
         labelsBottom.setBorder(BorderFactory.createEmptyBorder(0,10,0,0));
-        
+        // Creating panels for user grid, labels, computer panel, ships, and buttons
         JPanel computerPanel = new JPanel(new BorderLayout());
         JPanel shipPanel = new JPanel(new GridBagLayout());
         JPanel buttonPanel = new JPanel();
-       
+             
         // Adding buttons to GUI
         for (int y=0; y<10; y++) {
             for (int x=0; x<10; x++)   {
@@ -145,13 +149,6 @@ public class Main implements KeyListener {
                 userGrid.add(uGrid[x][y]);   
             }
         }
-        // Add sub-panels to user(left) and computer panels(right)
-        userPanel.add(labelsLeft, BorderLayout.WEST);
-        userPanel.add(userGrid, BorderLayout.CENTER);
-        userPanel.add(labelsBottom, BorderLayout.SOUTH);
-        computerPanel.add(shipPanel, BorderLayout.CENTER);
-        computerPanel.add(buttonPanel, BorderLayout.SOUTH);
-             
         //adding labels on GUI
         for (int x=0; x<11; x++) {
             if (x<10) {
@@ -164,15 +161,13 @@ public class Main implements KeyListener {
                 }
             }
         }
-
+        // Set constraints for ship buttons
         GridBagConstraints shipsGBC = new GridBagConstraints();
-        shipsGBC.fill = GridBagConstraints.NONE;
-        shipsGBC.insets = new Insets(5, 5, 5, 5);
-        shipsGBC.weightx = 0;
-        shipsGBC.weighty = 0;
+        shipsGBC.fill = GridBagConstraints.NONE; // 
+        shipsGBC.insets = new Insets(5, 5, 5, 5); // Padding around JButtons so they aren't touching each other
         // Adding ships to right of grid
         for (int x=0; x<5; x++) { 
-            switch (x) {
+            switch (x) { // Each value of x needs a different imageIcon
                 case 0:
                     ships[x] = new JButton(new ImageIcon(scaleshipImageH2));
                     break;     
@@ -189,9 +184,15 @@ public class Main implements KeyListener {
                     ships[x] = new JButton(new ImageIcon(scaleshipImageH5));
                     break;
                 default:
+                    // Handles unexpected values of x
                     System.out.println ("Error: h"); break;
             }
-
+            /*
+             * ActionListner for when the ships are clicked
+             * Identifies which button is pressed
+             * Assigns userSelection the length of the ship
+             * Assigns shipSelection to which ship is clicked
+             */
             ships[x].addActionListener(new ActionListener(){  
                 public void actionPerformed(ActionEvent e){ 
                     Object src = e.getSource(); 
@@ -207,33 +208,80 @@ public class Main implements KeyListener {
                     }       
                 }  
             });  
-            ships[x].setBorder(new LineBorder(Color.BLACK));
-            shipsGBC.gridx = x; // Column 0
+            ships[x].setBorder(new LineBorder(Color.BLACK)); // Adds a border around the button for aesthetic
+            shipsGBC.gridx = x; // Column 0-4
             shipsGBC.gridy = 0; // Row 0
             shipPanel.add(ships[x], shipsGBC);
         } 
+        // Add panels the GUI, some are sub-panels
+        userPanel.add(labelsLeft, BorderLayout.WEST);
+        userPanel.add(userGrid, BorderLayout.CENTER);
+        userPanel.add(labelsBottom, BorderLayout.SOUTH);
+        computerPanel.add(shipPanel, BorderLayout.CENTER);
+        computerPanel.add(buttonPanel, BorderLayout.SOUTH);
         GUI.add(userPanel);
         GUI.add(computerPanel);
         f.setLayout(new BorderLayout());
         f.add(GUI, BorderLayout.CENTER);
 
-        JLabel screenText = new JLabel("Click a ship to select. Press r to rotate ship. Click on grid to place ship",JLabel.CENTER); // Centres the text inside the JLabel
+        // Adding text label at the bottom of the GUI
+        JLabel screenText = new JLabel("Place all 5 ships to start",JLabel.CENTER); // Centres the text inside the JLabel
         screenText.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 13));
         textPanel.add(screenText);
         f.add(textPanel, BorderLayout.SOUTH);
+        //Instruction button
+        JButton instructionButton = new JButton("Instructions");
+        buttonPanel.add(instructionButton); 
+        instrcutions(instructionButton, computerPanel, shipPanel); // Calls the method to tell the button what to do
         gridActivity(computerPanel, shipPanel, buttonPanel, screenText); // Grid activity is for user cursor hovering and clicks
     }
 
+    /*
+     * Adds a mouseListener to the instructions button for when hovered
+     * Uses html text layout to add break between lines
+     * When the mouse hovers the button the ships need to hide, vice versa
+     */
+    public static void instrcutions(JButton instructionButton, JPanel computerPanel, JPanel shipPanel) {
+        instructionButton.addMouseListener(new java.awt.event.MouseAdapter() {
+            JLabel instrunctionLabel = new JLabel("<html>Battleships!<br>" // Text on JLabel
+            +"- In this game you play against the computer<br>" // br is a line break
+            +"- The objective is to sink all the computer's ships before it sinks all of yours<br>"
+            +"- Start by placing all your ships. Click a ship on the right to select it, and click again anywhere on the grid to place it. Press R on your keyboard to rotate the ship<br>"
+            +"- Once all ships are placed you can start the game<br>"
+            +"- Start by clicking somewhere on the computer's(left) grid to fire a shot<br>"
+            +"- The tile will change colour if it is a hit or miss, aswell as saying below the grid<br>"
+            +"- The computer will return a shot<br>"
+            +"- The game will end when either player destroys all 5 of the opponents battleships</html>", JLabel.CENTER);
+            public void mouseEntered(MouseEvent evt) {
+            shipPanel.setVisible(false);
+            computerPanel.add(instrunctionLabel);
+            }
+            public void mouseExited (MouseEvent evt) {
+                computerPanel.remove(instrunctionLabel);
+                shipPanel.setVisible(true);
+            }
+        });
+    }
+
+    /*
+     * Handles the grid activity including mouse events and button actions
+     * This method sets up the interactions for placing ships on the grid.
+     * Requires 4 parameters, local variables declared in the startGUI() method
+     */
     public static void gridActivity(JPanel computerPanel, JPanel shiPanel, JPanel buttonPanel, JLabel screenText) { //grid inputs
+        // Call for every button in the 2d array
         for (int y=0; y<10; y++) {
             for (int x=0; x<10; x++) {
-            int newX = x; //Cant use the x from the for loop inside a local method
+            int newX = x; // Cant use the x from the for loop inside a local method
             int newY = y;
+                // Add mouse listener to each grid button
                 uGrid[x][y].addMouseListener(new java.awt.event.MouseAdapter() {
+                    // If the user's cursor hovers over the button
                     public void mouseEntered(MouseEvent evt) {
                         if (userSelection > 0) {
                             Color colour = Color.black;
-                            if (shipRotation.equals("vertical")) {
+                            // If the ship preview is vertical
+                            if (shipRotation.equals("vertical")) { 
                                 for (int n=0; n<userSelection+1; n++) {
                                     if (newY+n > 9) {
                                         n = userSelection+1;
@@ -241,15 +289,16 @@ public class Main implements KeyListener {
                                         for (int z=0; z<userSelection+1; z++) {
                                             if (newY+userSelection > 9 || uGridData[newX][newY+userSelection-z] < 6 
                                             && uGridData[newX][newY+userSelection-z] != 0) { // Checking if it is placed over another ship
-                                                colour=Color.red;
+                                                colour=Color.red; // The preview will highlight red
                                             }
                                         }
-                                        if (uGrid[newX][newY+n].getBackground() != Color.DARK_GRAY) {
+                                        if (uGrid[newX][newY+n].getBackground() != Color.DARK_GRAY) { // If no ship is placed in the way
                                             uGrid[newX][newY+n].setBackground(colour);
                                         }
                                     }   
                                 }   
                             } 
+                            // If the ship preview is horizontal
                             if (shipRotation.equals("horizontal")) {
                                 for (int n=0; n<userSelection+1; n++) {
                                     if (newX+n > 9) {
@@ -261,7 +310,7 @@ public class Main implements KeyListener {
                                                 colour= Color.red;
                                             }
                                         }
-                                        if (uGrid[newX+n][newY].getBackground() != Color.DARK_GRAY) {
+                                        if (uGrid[newX+n][newY].getBackground() != Color.DARK_GRAY) { // If no ship is placed in the way
                                             uGrid[newX+n][newY].setBackground(colour);
                                         }
                                         
@@ -270,7 +319,7 @@ public class Main implements KeyListener {
                             } 
                         }     
                     }
-
+                    // If the user's cursors exits hover over the button
                     public void mouseExited(MouseEvent evt) {
                         if (userSelection > 0) {
                             if (shipRotation.equals("vertical")) {
@@ -278,7 +327,7 @@ public class Main implements KeyListener {
                                     if (newY+n > 9) {
                                         n = userSelection+1;   
                                     } else {
-                                        if (uGrid[newX][newY+n].getBackground() != Color.DARK_GRAY) {
+                                        if (uGrid[newX][newY+n].getBackground() != Color.DARK_GRAY) { //Checking a ship isnt placed 
                                             uGrid[newX][newY+n].setBackground(Color.white);
                                         }
                                        
@@ -290,7 +339,7 @@ public class Main implements KeyListener {
                                     if (newX+n > 9) {
                                         n = userSelection+1;   
                                     } else {
-                                        if (uGrid[newX+n][newY].getBackground() != Color.DARK_GRAY) {
+                                        if (uGrid[newX+n][newY].getBackground() != Color.DARK_GRAY) { //Checking a ship isnt placed 
                                             uGrid[newX+n][newY].setBackground(Color.white);
                                         }
                                     }   
@@ -299,32 +348,42 @@ public class Main implements KeyListener {
                         }  
                     }
                 }); 
- 
+                /*
+                 * When the button is clicked this method is called
+                 * Needs to check it isn't going to overlap another ship
+                 * Needs to check it isn't placing out of bounds
+                 */
                 uGrid[x][y].addActionListener(new ActionListener(){ 
                     public void actionPerformed(ActionEvent e){
                         if (clickable == true) {
-                            if (userSelection > 0 && uGrid[newX][newY].getBackground() == Color.black) { // If ship selected and in valid placement                    
+                             // Check if a ship is selected and the placement is valid
+                            if (userSelection > 0 && uGrid[newX][newY].getBackground() == Color.black) { // If background isn't black it is out of bounds or over another ship  
+                                // Place ship vertically                
                                 if (shipRotation.equals("vertical")) {
                                     for (int n=0; n<userSelection+1; n++) {
-                                        uGrid[newX][newY+n].setText("");
+                                        uGrid[newX][newY+n].setText(""); // If there is text it messes with the image postions 
                                         uGrid[newX][newY+n].setBackground(Color.DARK_GRAY);
                                         uGrid[newX][newY+n].setIcon(new ImageIcon(shipImage.getImage().getScaledInstance(uGrid[newX][newY+n].getWidth(), uGrid[newX][newY+n].getHeight(),Image.SCALE_DEFAULT))); 
-                                        uGridData[newX][newY+n] = shipSelection+1;
+                                        uGridData[newX][newY+n] = shipSelection+1; // Updates the state of this postion in the data variable
                                     }
-                                } else if (shipRotation.equals("horizontal")) {
+                                } 
+                                // Place ship horizontally
+                                else if (shipRotation.equals("horizontal")) {
                                     for (int n=0; n<userSelection+1; n++) {
+                                        // Does the same as before but along X-axis
                                         uGrid[newX+n][newY].setText("");
                                         uGrid[newX+n][newY].setBackground(Color.DARK_GRAY);
                                         uGrid[newX+n][newY].setIcon(new ImageIcon(shipImage.getImage().getScaledInstance(uGrid[newX+n][newY].getWidth(), uGrid[newX+n][newY].getHeight(),Image.SCALE_DEFAULT)));
                                         uGridData[newX+n][newY] = shipSelection+1;
                                     }
                                 }
-                                ships[shipSelection].setVisible(false);
-                                userSelection = 0;
+                                ships[shipSelection].setVisible(false); // Removes the ship from the right
+                                // Reset selection and rotation
+                                userSelection = 0; 
+                                shipRotation = "vertical";
+                                // Calls methods for buttons
                                 resetButton(buttonPanel);
                                 startButton(computerPanel, shiPanel, buttonPanel, screenText);
-                                screenText.setText("Place all 5 ships to start");
-                                shipRotation = "vertical";
                             } else if (uGrid[newX][newY].getBackground() != Color.black) { // If ship is placed outside of bounds
                                 System.out.println("Error: Ship placement out of bounds");
                             } 
@@ -334,36 +393,50 @@ public class Main implements KeyListener {
             }
         }
     }
-    
+
+    /**
+     * Resets the grid and ship buttons to their initial state
+     * This method makes the reset button visible 
+     * Uses actionListener to reset the state of the grid and the ships when clicked
+     * Takes the buttonPanel variable to add resetButton later
+     * Reset button is only visible after 1 or more ship(s) have been placed
+     */
     public static void resetButton(JPanel buttonPanel) {
-        // Reset button is only visible after 1 or more ship(s) have been placed
-        rButton.setVisible(false);
+        // Initially add the reset button and set to visible
         buttonPanel.add(rButton);
         rButton.setVisible(true);
+        
         rButton.addActionListener(new ActionListener() { // Reset button actionListener
+            // When clicked
             public void actionPerformed(ActionEvent e){ 
                 for (int x=0; x<ships.length; x++) {
-                    ships[x].setVisible(true);
+                    // Add all ships back on the right
+                    ships[x].setVisible(true); 
                 }              
                 for (int y=0; y<10; y++) {
                     for (int x=0; x<10; x++) {
                         uGrid[x][y].setVisible(true);
                         uGrid[x][y].setBackground(Color.white);
                         uGrid[x][y].setText("-");
-                        uGrid[x][y].setIcon(null);
-                        uGridData[x][y] = 0; // reseting data
+                        uGrid[x][y].setIcon(null); // Remove images
+                        uGridData[x][y] = 0; // Reseting data
                     }
                 }
-                rButton.setVisible(false); //Reset the button to be invisible
-                startButton.setVisible(false);
+                // Reset the buttons to be invisible
+                rButton.setVisible(false); 
+                startButton.setVisible(false); 
             }
         });
     } 
 
-    //Implements of the KeyListener
+    /*
+     * Implements of the KeyListener
+     * I only need the key pressed lisntener
+     * Other 2 are required for the KeyListener implement
+    */
+    
     @Override
     public void keyTyped(KeyEvent e) { // Typed text
-        // I dont need this method but I need to leave it for KeyListner anyways
     }
     @Override
     public void keyPressed(KeyEvent e) { // When key is pressed
@@ -379,42 +452,51 @@ public class Main implements KeyListener {
         for (int y=0; y<10; y++) {
             for (int x=0; x<10; x++) {
                 if (uGrid[x][y].getBackground() != Color.DARK_GRAY) {
-                    uGrid[x][y].setBackground(Color.white); // Reset grid 
+                    uGrid[x][y].setBackground(Color.white); // Reset placement previews on the grid
                 }   
             }
         }
     }
     @Override
-    public void keyReleased(KeyEvent e) { // Typed text
-        // I dont need this either
+    public void keyReleased(KeyEvent e) { // Key released
     } 
 
+    /**
+     * Sets up and displays the start button, making it visible only when all ships are placed
+     * When the start button is clicked, it initiates the game method and updates the UI accordingly
+     */
     public static void startButton(JPanel computerPanel, JPanel shipPanel, JPanel buttonPanel, JLabel screenText) {
         startButton.setVisible(false); // When button is created it needs to be invisible
         buttonPanel.add(startButton); 
         if (ships[0].isVisible() == false && ships[1].isVisible() == false && ships[2].isVisible() == false
         && ships[3].isVisible() == false && ships[4].isVisible() == false) { // Condition for when all ships are placed
-            startButton.setVisible(true);
-            startButton.addActionListener(new ActionListener() { // ActionListener of start button
+            startButton.setVisible(true); // Make start button visible
+            // ActionListener of start button
+            startButton.addActionListener(new ActionListener() { 
                 public void actionPerformed(ActionEvent e){ 
                     startGame(computerPanel); // Calling startGame method 
+                    // Removes panels from the right and bottom of the screen
                     textPanel.remove(screenText);
                     computerPanel.remove(buttonPanel);
                     computerPanel.remove(shipPanel);
                     startButton.setVisible(false);
-                    rButton.setVisible(false);
+                    buttonPanel.remove(rButton);
                 }
             });
         }    
     }
-
+    
+    /**
+     * Initializes and starts the game by setting up the computer's grid and labels
+     * This method also sets up action listeners for the computer grid buttons to handle user interactions
+     */
     public static void startGame(JPanel computerPanel) {
-        // Calls when the game has started
         System.out.println("Game Started");
         String[] alphabetString = {"A", "B", "C", "D", "E", "F", "G", "H", "I", "J"};
-        JLabel[] labels = new JLabel[20];
-        JLabel screenText = new JLabel("",JLabel.CENTER); // Centres the text inside the JLabel
+        JLabel[] labels = new JLabel[20]; // Labels for right and bottom of the computer grid
+        JLabel screenText = new JLabel("",JLabel.CENTER); // Text is currently empty
 
+        /* Creates and installs JPanel for the right side of the screen */
         JPanel computerGrid = new JPanel(new GridLayout(10, 10));  
         JPanel labelsLeft = new JPanel(new GridLayout(10, 1));
         JPanel labelsBottom = new JPanel(new GridLayout(1, 10));
@@ -422,36 +504,43 @@ public class Main implements KeyListener {
         computerPanel.add(computerGrid, BorderLayout.CENTER); 
         computerPanel.add(labelsLeft, BorderLayout.EAST);     
         computerPanel.add(labelsBottom, BorderLayout.SOUTH); 
-        // Adding buttons for computer grid
+        
+        /* Adding buttons for computer grid */
         for (int y=0; y<10; y++) {
             for (int x=0; x<10; x++)   {
-                int xx = x; // I need these because the program dosen't allow methods to send variables from for loops
+                int xx = x; // I need these because the program dosen't allow methods to send variables from 
                 int yy=y;
                 cGridData[x][y] = 0; // Sets the entire computer grid to notihing, look at top for number reference
                 cGrid[x][y]=new JButton("-");
-                //Colour and properties of button
+                /* Colour and properties of button */
                 cGrid[x][y].setMargin(new Insets(0,0,0,0));
                 cGrid[x][y].setBackground(Color.white);
                 cGrid[x][y].setOpaque(true);
                 cGrid[x][y].setBorderPainted(false);
-                
-                cGrid[x][y].addActionListener(new ActionListener() { // Action listner for button presses
+                // Action listener for grid button presses
+                cGrid[x][y].addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent e){
                         if (clickable == true) {
-                            if (turn == 0) { // Add screen Text if it is the first turn
+                            if (turn == 0) { // If first turn
+                                // Add text to the text panel at the bottom of the screen
                                 textPanel.add(screenText);
                                 refreshScreen();
                             }
                             String text = userShot(xx, yy); // Calls for userShot method, which will return hit result
-                            screenTimer(text, screenText, false);               
+                            // Sends the result of the usershot to a timer method, the timer method creates the text on the bottom on the screen
+                            if (cGrid[xx][yy].getBackground() == Color.RED) {
+                                screenTimer(text, screenText, false);
+                            } else {
+                                screenTimer(text, screenText, false);
+                            }
                         }   
                     }
                 });
-                computerGrid.add(cGrid[x][y]);   
+                computerGrid.add(cGrid[x][y]); // Adds button to the grid panel
             }
         }
         
-        // Adding labels for compiter grid
+        // Adding labels for computer grid, same code as the user's grid labels
         for (int x=0; x<11; x++) {
             if (x<10) {
                 labels[x] = new JLabel(" "+alphabetString[x]+ " "); 
@@ -525,7 +614,26 @@ public class Main implements KeyListener {
         } else if (cGridData[xPos][yPos] < 6 && cGridData[xPos][yPos] !=0) { // A ship is hit
             cShipHitPoints[cGridData[xPos][yPos]-1]--; // Lower hitpoint of the hit computer ship by 1
             if (cShipHitPoints[cGridData[xPos][yPos]-1] == 0) {
-                text = "You have destroyed a ship";
+                switch (cGridData[xPos][yPos]-1) {
+                    case 0:
+                        text = "You have destroyed the Destroyer"; 
+                        break;
+                    case 1:
+                        text = "You have destroyed the Submarine"; 
+                        break;
+                    case 2:
+                        text = "You have destroyed the Cruiser";
+                        break;
+                    case 3:
+                        text = "You have destroyed the Battleship";
+                        break;
+                    case 4:
+                        text = "You have destroyed the Carrier";
+                        break;
+                    default:
+                        text = "Error: value cGridData[xPos][yPos]-1";
+                        break;
+                }
             } else {
                 text = "You hit a Battleship!";
             }
@@ -617,46 +725,44 @@ public class Main implements KeyListener {
             System.out.println(yPos);
         } 
         
-        if (uGridData[xPos][yPos] >= 6) { //Already shot this position, either hit or miss
+        if (uGridData[xPos][yPos] >= 6) { // Already shot this position, either hit or miss
             text = "Error: Already shot here";
-            if (lastY > 0 && lastY  < 9) {
-                if (hitDirection == "vertical" && uGridData[xPos][lastY+1] >= 6 && uGridData[lastX][lastY-1] >= 6) {
-                    if (lastY == originalY) {
-                        System.out.println("Error loop");
-                        hitDirection = "horizontal";
-                    } else {
-                        lastY = originalY;
+            if (hitDirection == "vertical") {
+                if (lastY-1 >= 0) {
+                    if (uGridData[lastX][lastY-1] >= 6) {
+                        if (lastY+1 <= 9) {
+                            if (uGridData[lastX][lastY+1] >= 6) {
+                                if (lastY == originalY) {
+                                    System.out.println("Error loop");
+                                    hitDirection = null;
+                                    lastX = -1;
+                                    lastY = -1;
+                                } else {
+                                    lastY = originalY;
+                                }
+                            }
+                        }
                     }
-                } 
-            } else if (lastY  == 0) {
-                if (hitDirection == "vertical" && uGridData[lastX][lastY+1] >= 6) {
-                    lastY = originalY;
                 }
-            } else if (lastY == 9) {
-                if (hitDirection == "vertical" && uGridData[lastX][lastY-1] >= 6) {
-                    lastY = originalY;
-                }
-            } 
-           
-            if (lastX > 0 && lastX < 9) {
-                if (hitDirection == "horizontal" && uGridData[lastX+1][lastY] >= 6 && uGridData[lastX-1][lastY] >= 6) {
-                    if (lastX == originalX) {
-                        System.out.println("Error loop");
-                        hitDirection = "vertical";
-                    } else {
-                        lastX = originalX;
+            } else if (hitDirection == "horizontal") {
+                if (lastX-1 >= 0) {
+                    if (uGridData[lastX-1][lastY] >= 6) {
+                        if (lastX+1 <= 9) {
+                            if (uGridData[lastX+1][lastY] >= 6) {
+                                if (lastX == originalX) {
+                                    System.out.println("Error loop");
+                                    hitDirection = null;
+                                    lastX = -1;
+                                    lastY = -1;
+                                } else {
+                                    lastX = originalX;
+                                }
+                                
+                            }
+                        }
                     }
-                    lastX = originalX;
                 }
-            } else if (lastX == 0) {
-                if (hitDirection == "horizontal" && uGridData[lastX+1][lastY] >= 6) {
-                    lastX = originalX;
-                }
-            } else if (lastX == 9) {
-                if (hitDirection == "horizontal" && uGridData[lastX-1][lastY] >= 6) {
-                    lastX = originalX;
-                }
-            } 
+            }
                    
         } else if (uGridData[xPos][yPos] < 6 && uGridData[xPos][yPos] != 0) { // Hit
             uGrid[xPos][yPos].setIcon(new ImageIcon(shipImageHit.getImage().getScaledInstance(uGrid[xPos][yPos].getWidth(), uGrid[xPos][yPos].getHeight(),Image.SCALE_DEFAULT)));
@@ -753,39 +859,9 @@ public class Main implements KeyListener {
                     }
                     System.out.println(hitDirection);
                 } else {
-                    // Reset shooting postion to original to shoot in other direction
-                    for (int n=0; n<4; n++) {
-                        if (hitDirection == "vertical") {
-                            if (lastY+n < 10) {
-                                if (uGridData[lastX][lastY+n] <= 5) {
-                                    n = 4;
-                                }
-                            } else if (lastY-n > -1) {
-                                if (uGridData[lastX][lastY-n] <= 5) {
-                                    n = 4;
-                                }
-                            }
-                        } else if (hitDirection == "horizontal") {
-                            if (lastX+n < 10) {
-                                if (uGridData[lastX+n][lastY] <= 5) {
-                                    n = 4;
-                                }
-                            } else if (lastX-n > -1) {
-                                if (uGridData[lastX-n][lastY] <= 5) {
-                                    n = 4;
-                                }
-                            }
-                        }
-                        if (n == 4) {
-                            lastX = originalX;
-                            lastY = originalY;
-                        } else if (n == 3) {
-                            System.out.println("Error algorithim placement");
-                            lastX = -1;
-                            lastY = -1;
-                        }
-                    }
-                }                               
+                    lastX = originalX;
+                    lastY = originalY;
+                }            
             }
             turn++;
         }
