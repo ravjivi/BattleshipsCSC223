@@ -1,6 +1,6 @@
 /* 
 * PROJECT TITLE: Battleships
-* VERSION or DATE: Version 5.3, 28.06.24
+* VERSION or DATE: Version 5.4, 1.07.24
 * AUTHOR: Viraaj Ravji
 * DETAILS:
     * Changes to shooting algorithm
@@ -21,26 +21,29 @@ public class Main implements KeyListener {
     private static final int GUIWIDTH = GUIHEIGHT*5/2; // Width of the GUI proportional to the width of the scrreen
     
     private static JFrame f=new JFrame("Battleships"); // Creates JFrame, the GUI window
-    private static JPanel GUI = new JPanel(new GridLayout(1,2,20, 0)); // 1 row,2 columns,20px horizontal gap,0px vertical gap
+    private static JPanel guiPanel = new JPanel(new GridLayout(1,2,20, 0)); // 1 row,2 columns,20px horizontal gap,0px vertical gap
     private static JPanel textPanel = new JPanel();
 
     private static int GUITAB = 30; //This will scale with the size of the GUI, default is 30
     private static JButton[][] uGrid = new JButton[10][10]; // User Grid
     private static JButton[][] cGrid = new JButton[10][10]; // Computer Grid
     private static int[][] uGridData = new int[10][10]; // 0-nothing, 1-5-ship, 6-hit ship, 7-miss
-    private static int[][] cGridData = new int[10][10]; // 0-nothing, 1-5-ship, 6-hit ship, 7-miss
-    private static int[] uShipHitPoints = {2, 3, 3, 4, 5}; 
+    private static int[][] cGridData = new int[10][10]; 
+    private static int[] uShipHitPoints = {2, 3, 3, 4, 5}; // How many hits left on each user's battleship
     private static int[] cShipHitPoints = {2, 3, 3, 4, 5}; 
     private static JButton[] ships = new JButton[5];
     private static int tileHeight = GUIHEIGHT/10; // Tile spacing vertical
     private static int tileWidth = GUIWIDTH/20; // Tile spacing horizontal
     private static int userSelection;
     private static int shipSelection;
+    private static JButton currentHoveredButton = null; 
     private static final JButton rButton = new JButton("Reset");; //reset JButton
     private static String shipRotation = "vertical";
     private static final JButton startButton = new JButton("Press to Start"); // start JButton
     private static int turn = 0;
     private static Boolean clickable = true; // Is the gui clickable
+    private static Boolean gameOver = false; // Is the game over
+    private static Boolean boldText = false;
     
     // Computer algorithm
     private static int lastX = -1;
@@ -48,7 +51,6 @@ public class Main implements KeyListener {
     private static String hitDirection = null;
     private static int originalX;
     private static int originalY;
-    private static int loopCount = 0;
 
 
     /*IMAGES*/
@@ -100,7 +102,7 @@ public class Main implements KeyListener {
                     }
                 }   
                 GUITAB = f.getWidth()/75;  
-                GUI.setLayout(new GridLayout(1,2,GUITAB, 0));
+                guiPanel.setLayout(new GridLayout(1,2,GUITAB, 0));
             }
         });
         refreshScreen();    
@@ -199,6 +201,8 @@ public class Main implements KeyListener {
                     for (int x=0; x<5; x++) {
                         if (src.equals(ships[x])) {
                             System.out.println("User has selected Ship "+(x+1));
+                            ships[shipSelection].setBorder(new LineBorder(Color.BLACK, 1)); // Makes previosly selected ship default outline
+                            ships[x].setBorder(new LineBorder(Color.BLUE, 2)); // Makes new selection outlined in blue
                             userSelection = x+1;
                             shipSelection = x;
                             if (userSelection > 2) {
@@ -219,10 +223,10 @@ public class Main implements KeyListener {
         userPanel.add(labelsBottom, BorderLayout.SOUTH);
         computerPanel.add(shipPanel, BorderLayout.CENTER);
         computerPanel.add(buttonPanel, BorderLayout.SOUTH);
-        GUI.add(userPanel);
-        GUI.add(computerPanel);
+        guiPanel.add(userPanel);
+        guiPanel.add(computerPanel);
         f.setLayout(new BorderLayout());
-        f.add(GUI, BorderLayout.CENTER);
+        f.add(guiPanel, BorderLayout.CENTER);
 
         // Adding text label at the bottom of the GUI
         JLabel screenText = new JLabel("Place all 5 ships to start",JLabel.CENTER); // Centres the text inside the JLabel
@@ -264,11 +268,11 @@ public class Main implements KeyListener {
     }
 
     /*
-     * Handles the grid activity including mouse events and button actions
+     * Handles the inputs on the grid including mouse events and button actions
      * This method sets up the interactions for placing ships on the grid.
      * Requires 4 parameters, local variables declared in the startGUI() method
      */
-    public static void gridActivity(JPanel computerPanel, JPanel shiPanel, JPanel buttonPanel, JLabel screenText) { //grid inputs
+    public static void gridActivity(JPanel computerPanel, JPanel shiPanel, JPanel buttonPanel, JLabel screenText) { 
         // Call for every button in the 2d array
         for (int y=0; y<10; y++) {
             for (int x=0; x<10; x++) {
@@ -278,6 +282,7 @@ public class Main implements KeyListener {
                 uGrid[x][y].addMouseListener(new java.awt.event.MouseAdapter() {
                     // If the user's cursor hovers over the button
                     public void mouseEntered(MouseEvent evt) {
+                        currentHoveredButton = (JButton) evt.getSource(); // Track the current hovered button
                         if (userSelection > 0) {
                             Color colour = Color.black;
                             // If the ship preview is vertical
@@ -321,6 +326,7 @@ public class Main implements KeyListener {
                     }
                     // If the user's cursors exits hover over the button
                     public void mouseExited(MouseEvent evt) {
+                        currentHoveredButton = null;
                         if (userSelection > 0) {
                             if (shipRotation.equals("vertical")) {
                                 for (int n=0; n<userSelection+1; n++) {
@@ -412,6 +418,7 @@ public class Main implements KeyListener {
                 for (int x=0; x<ships.length; x++) {
                     // Add all ships back on the right
                     ships[x].setVisible(true); 
+                    ships[x].setBorder(new LineBorder(Color.BLACK, 1)); // No ship is visibly selected
                 }              
                 for (int y=0; y<10; y++) {
                     for (int x=0; x<10; x++) {
@@ -434,7 +441,6 @@ public class Main implements KeyListener {
      * I only need the key pressed lisntener
      * Other 2 are required for the KeyListener implement
     */
-    
     @Override
     public void keyTyped(KeyEvent e) { // Typed text
     }
@@ -447,13 +453,23 @@ public class Main implements KeyListener {
                 shipRotation = "horizontal";
             } else {
                 shipRotation = "vertical";
+                
             } 
-        }
-        for (int y=0; y<10; y++) {
-            for (int x=0; x<10; x++) {
-                if (uGrid[x][y].getBackground() != Color.DARK_GRAY) {
-                    uGrid[x][y].setBackground(Color.white); // Reset placement previews on the grid
-                }   
+            for (int y=0; y<10; y++) {
+                for (int x=0; x<10; x++) {
+                    if (uGrid[x][y].getBackground() != Color.DARK_GRAY) { // If no ship is placed on this tile
+                        uGrid[x][y].setBackground(Color.white); // Reset placement previews on the grid 
+                    }                       
+                }
+            }
+            // Re-trigger the mouseEntered event mannually if a button is currently hovered
+            if (currentHoveredButton != null) {
+                MouseEvent enterEvent = new MouseEvent(currentHoveredButton, MouseEvent.MOUSE_ENTERED, // Which button and what event
+                System.currentTimeMillis(), // Gives the time the event occured
+                0, 0, 0, 0, false); // 0 modifiers. Neccecry for calling manual event
+                for (MouseListener listener : currentHoveredButton.getMouseListeners()) {
+                    listener.mouseEntered(enterEvent); // Manually call the mouse entered event
+                }
             }
         }
     }
@@ -528,11 +544,8 @@ public class Main implements KeyListener {
                             }
                             String text = userShot(xx, yy); // Calls for userShot method, which will return hit result
                             // Sends the result of the usershot to a timer method, the timer method creates the text on the bottom on the screen
-                            if (cGrid[xx][yy].getBackground() == Color.RED) {
-                                screenTimer(text, screenText, false);
-                            } else {
-                                screenTimer(text, screenText, false);
-                            }
+                            screenTimer(text, screenText);
+
                         }   
                     }
                 });
@@ -616,26 +629,28 @@ public class Main implements KeyListener {
             if (cShipHitPoints[cGridData[xPos][yPos]-1] == 0) {
                 switch (cGridData[xPos][yPos]-1) {
                     case 0:
-                        text = "You have destroyed the Destroyer"; 
+                        text = "You have destroyed the Destroyer!"; 
                         break;
                     case 1:
-                        text = "You have destroyed the Submarine"; 
+                        text = "You have destroyed the Submarine!"; 
                         break;
                     case 2:
-                        text = "You have destroyed the Cruiser";
+                        text = "You have destroyed the Cruiser!";
                         break;
                     case 3:
-                        text = "You have destroyed the Battleship";
+                        text = "You have destroyed the Battleship!";
                         break;
                     case 4:
-                        text = "You have destroyed the Carrier";
+                        text = "You have destroyed the Carrier!";
                         break;
                     default:
                         text = "Error: value cGridData[xPos][yPos]-1";
                         break;
                 }
+                boldText = true;
             } else {
-                text = "You hit a Battleship!";
+                text = "You hit a Battleship";
+                boldText = false;
             }
             cGridData[xPos][yPos] = 6;
             cGrid[xPos][yPos].setBackground(Color.RED);
@@ -644,6 +659,7 @@ public class Main implements KeyListener {
             cGridData[xPos][yPos] = 7;
             cGrid[xPos][yPos].setBackground(Color.BLACK);
             text = "Miss! Nothing was hit";
+            boldText = false;
             turn++;
         }
         return (text);
@@ -734,9 +750,28 @@ public class Main implements KeyListener {
                             if (uGridData[lastX][lastY+1] >= 6) {
                                 if (lastY == originalY) {
                                     System.out.println("Error loop");
-                                    hitDirection = null;
-                                    lastX = -1;
-                                    lastY = -1;
+                                    if (lastX-1 >= 0) {
+                                        if (uGridData[lastX-1][lastY] <= 5) {
+                                            hitDirection = "horizontal";
+                                        } else {
+                                            hitDirection = null;
+                                            lastX = -1;
+                                            lastY = -1;
+                                        }
+                                    } else if (lastX+1 <= 9) {
+                                        if (uGridData[lastX+1][lastY] <= 5) {
+                                            hitDirection = "horizontal";
+                                        } else {
+                                            hitDirection = null;
+                                            lastX = -1;
+                                            lastY = -1;
+                                        }
+                                    } else {
+                                        hitDirection = null;
+                                        lastX = -1;
+                                        lastY = -1;
+                                    }
+                                   
                                 } else {
                                     lastY = originalY;
                                 }
@@ -750,10 +785,27 @@ public class Main implements KeyListener {
                         if (lastX+1 <= 9) {
                             if (uGridData[lastX+1][lastY] >= 6) {
                                 if (lastX == originalX) {
-                                    System.out.println("Error loop");
-                                    hitDirection = null;
-                                    lastX = -1;
-                                    lastY = -1;
+                                    if (lastY-1 >= 0) {
+                                        if (uGridData[lastX][lastY-1] <= 5) {
+                                            hitDirection = "vertical";
+                                        } else {
+                                            hitDirection = null;
+                                            lastX = -1;
+                                            lastY = -1;
+                                        }
+                                    } else if (lastY+1 <= 9) {
+                                        if (uGridData[lastX][lastY+1] <= 5) {
+                                            hitDirection = "vertical";
+                                        } else {
+                                            hitDirection = null;
+                                            lastX = -1;
+                                            lastY = -1;
+                                        }
+                                    } else {
+                                        hitDirection = null;
+                                        lastX = -1;
+                                        lastY = -1;
+                                    }
                                 } else {
                                     lastX = originalX;
                                 }
@@ -766,7 +818,6 @@ public class Main implements KeyListener {
                    
         } else if (uGridData[xPos][yPos] < 6 && uGridData[xPos][yPos] != 0) { // Hit
             uGrid[xPos][yPos].setIcon(new ImageIcon(shipImageHit.getImage().getScaledInstance(uGrid[xPos][yPos].getWidth(), uGrid[xPos][yPos].getHeight(),Image.SCALE_DEFAULT)));
-            text = "Opponent has hit a Battleship!";
             uShipHitPoints[(uGridData[xPos][yPos]-1)]--; // Lower hitpoint of the hit user ship by 1
             if (lastX > -1 || lastY > -1) {
                 if (hitDirection == null) {
@@ -778,21 +829,49 @@ public class Main implements KeyListener {
                     System.out.println(hitDirection); 
                 }   
             }
-            lastX = xPos;
-            lastY = yPos;
-            if (uShipHitPoints[uGridData[xPos][yPos]-1] == 0) { // Reset last variables if the ship is destroyed
-                lastX = -1;
-                lastY = -1;
-                hitDirection = null;
-            }
             if (hitDirection == null) {
                 // Original postion of shot
                 originalX = xPos;
                 originalY = yPos;
             }
-            uGridData[xPos][yPos] = 6;
+            
+            // Update last shots
+            lastX = xPos; 
+            lastY = yPos;
+            if (uShipHitPoints[uGridData[xPos][yPos]-1] == 0) {
+                boldText = true;
+                switch (uGridData[xPos][yPos]-1) {
+                    case 0:
+                        text = "Opponent has destroyed your Destroyer!"; 
+                        break;
+                    case 1:
+                        text = "Opponent has destroyed your Submarine!"; 
+                        break;
+                    case 2:
+                        text = "Opponent has destroyed your Cruiser!";
+                        break;
+                    case 3:
+                        text = "Opponent has destroyed your Battleship!";
+                        break;
+                    case 4:
+                        text = "Opponent has destroyed your Carrier!";
+                        break;
+                    default:
+                        text = "Error: value uGridData[xPos][yPos]-1";
+                        break;
+                }
+                // Reset last variables and hit direction if the ship is destroyed
+                lastX = -1; // Next shot will be random 
+                lastY = -1;
+                hitDirection = null;
+            } else {
+                text = "Opponent has hit a Battleship!";
+                boldText = false;
+            }
+            uGridData[xPos][yPos] = 6; // Tile is now miss
             turn++;
         } else { // Nothing is hit
+            boldText = false; 
             uGrid[xPos][yPos].setBackground(Color.black);
             uGridData[xPos][yPos] = 7;
             text = "Opponent missed! Nothing was hit";
@@ -872,16 +951,25 @@ public class Main implements KeyListener {
         if (uShipHitPoints[0] == 0 && uShipHitPoints[1] == 0 && uShipHitPoints[2] == 0 &&
         uShipHitPoints[3] == 0 && uShipHitPoints[4] == 0) {
             System.out.println("Game over, computer wins");
-            screenTimer("Game over, computer wins", screenText, true);
+            gameOver = true;
+            screenTimer("Game over, computer wins", screenText);
         } else if (cShipHitPoints[0] == 0 && cShipHitPoints[1] == 0 && cShipHitPoints[2] == 0 &&
         cShipHitPoints[3] == 0 && cShipHitPoints[4] == 0) {
             System.out.println("Game over, user wins");
-            screenTimer("Game over, user wins", screenText, true);
+            gameOver = true;
+            screenTimer("Game over, user wins", screenText);
 
         }   
     }
 
-    public static void screenTimer(String text, JLabel screenText, boolean gameOver) {
+    public static void screenTimer(String text, JLabel screenText) {
+        if (boldText) {
+            // Make text bold
+            screenText.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 13));
+        } else {
+            // Default
+            screenText.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 13));
+        }
         Timer timer = new Timer(30, new ActionListener() { //Timer runs every 30ms
             int index = 0;
             @Override
@@ -889,23 +977,28 @@ public class Main implements KeyListener {
                 if (index < text.length()) {
                     clickable = false;
                     // Reveal one more character
-                    screenText.setText(text.substring(0, index + 1)); // Starts from 0 and adds each character up to the int of index
+                    screenText.setText(text.substring(0, index + 1)); // Starts from 0(first character) and adds each character up to the int of index
                     index++;
                 } else {
                     // Stop the timer once all characters are revealed
                     ((Timer)e.getSource()).stop();
-                    if (turn%2 == 1) { //If it is end of user's turn
+                    if (!gameOver) { // Game over is false
+                        winChecker(screenText);
+                    }
+                    if (turn%2 == 1 && !gameOver) { //If it is end of user's turn
                         String ntext = null;
-                        while (turn%2 == 1 && gameOver==false) { //
-                            ntext = computerShot(); // Calls for userShot method, which will return hit result
-                        }
-                        try {
-                            Thread.sleep(500); // Pause for 0.5s
-                            screenTimer(ntext, screenText, false);    
-                        } catch (InterruptedException ie) {                          
-                            Thread.currentThread().interrupt(); 
-                        } 
-                    } else if (gameOver == true) {
+                        if (gameOver==false) {
+                            while (turn%2 == 1) { //
+                                ntext = computerShot(); // Calls for userShot method, which will return hit result
+                            }
+                            try {
+                                Thread.sleep(500); // Pause for 0.5s
+                                screenTimer(ntext, screenText);    
+                            } catch (InterruptedException ie) {                          
+                                Thread.currentThread().interrupt(); 
+                            } 
+                        }      
+                    } else if (gameOver) {
                         clickable = false;
                     } else {
                         clickable = true;
