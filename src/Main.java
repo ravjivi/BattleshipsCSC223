@@ -1,9 +1,9 @@
 /* 
 * PROJECT TITLE: Battleships
-* VERSION or DATE: Version 5.5, 23.07.24
+* VERSION or DATE: Version 5.6, 23.07.24
 * AUTHOR: Viraaj Ravji
 * DETAILS:
-    * More comments and small changes to computer AI
+    * Fixed issue with not adding comments to the newly commited files
 */
 
 /*LIBRARY*/
@@ -74,9 +74,7 @@ public class Main implements KeyListener {
     
     public Main() {
         // GUI window properties for JFrame
-        System.out.println(GUIHEIGHT);
-        System.out.println(GUIWIDTH);
-        f.setSize(GUIWIDTH+GUITAB*3, GUIHEIGHT+GUITAB*3);  
+        f.setSize(GUIWIDTH+GUITAB*3, GUIHEIGHT+GUITAB*2);  
         f.setFocusTraversalKeysEnabled(true);
         f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); 
         f.setFocusable(true);
@@ -103,7 +101,7 @@ public class Main implements KeyListener {
                     }
                 }   
                 GUITAB = f.getWidth()/75;  
-                guiPanel.setLayout(new GridLayout(1,2,GUITAB, 0)); // Changes the gap between the left grid and right grid   
+                guiPanel.setLayout(new GridLayout(1,2,GUITAB, 0));
             }
         });
         refreshScreen();    
@@ -188,7 +186,8 @@ public class Main implements KeyListener {
                     break;
                 default:
                     // Handles unexpected values of x
-                    System.out.println ("Error: h"); break;
+                    System.out.println ("Error: h"); 
+                    break;
             }
             /*
              * ActionListner for when the ships are clicked
@@ -570,6 +569,12 @@ public class Main implements KeyListener {
         computerShip(); // Places computer ships
     }
 
+    /**
+     * This method creates the computer ships randomly
+     * The location of the ship is stored in a 2d array
+     * The ships cannot overlap or be placed out of bounds
+     * The rotation, xpostion, and ypostion are all random
+     */
     public static void computerShip() { // Creates the position of the computer ship
         String[] rotation = {"vertical", "horizontal"};
         int[] length = {2, 3, 3, 4, 5};
@@ -586,7 +591,7 @@ public class Main implements KeyListener {
                     } else { // Ship is currently placed in that location
                         System.out.println("Error overlap vertical: "+xPos+ ", "+(yPos+z)+", "+n+yPos);
                         for (int zz=0; zz<z; zz++) { // Remove currently placed tiles for this ship
-                            cGridData[xPos][yPos+zz] = 0; // 0 is nothing
+                            cGridData[xPos][yPos+zz] = 0; // Undo ship in that postion
                         }
                         z=length[n]; //Exit z for loop
                         n-=1; //Re-place this ship
@@ -609,18 +614,13 @@ public class Main implements KeyListener {
                 }
             }      
         }
-        for (int y=0; y<10; y++) { // FOR TESTING
-            for (int x=0; x<10; x++) {
-                if (cGridData[x][y] != 0) {
-                    System.out.print(cGridData[x][y]+" ");
-                } else {
-                    System.out.print(". ");
-                }
-            }
-            System.out.println(" ");
-        }
     }
-
+    /**
+     * This method is responsible for returing the result of the user's shot
+     * The method inputs the x and y postion of the shot
+     * It returns a string of the result of the shot
+     * Inside the method it updates all the variables related to the result of the shot
+     */
     public static String userShot(int xPos, int yPos) {
         String text;
         if (cGridData[xPos][yPos] >= 6) { //Already shot this position, either hit or miss
@@ -628,7 +628,7 @@ public class Main implements KeyListener {
         } else if (cGridData[xPos][yPos] < 6 && cGridData[xPos][yPos] !=0) { // A ship is hit
             cShipHitPoints[cGridData[xPos][yPos]-1]--; // Lower hitpoint of the hit computer ship by 1
             if (cShipHitPoints[cGridData[xPos][yPos]-1] == 0) {
-                switch (cGridData[xPos][yPos]-1) {
+                switch (cGridData[xPos][yPos]-1) { // Which ship was destroyed
                     case 0:
                         text = "You have destroyed the Destroyer!"; 
                         break;
@@ -648,11 +648,12 @@ public class Main implements KeyListener {
                         text = "Error: value cGridData[xPos][yPos]-1";
                         break;
                 }
-                boldText = true;
-            } else {
+                boldText = true; // Make text bold becase a ship was hit
+            } else { // A ship was not destroyed
                 text = "You hit a Battleship";
                 boldText = false;
             }
+            // Update the grid upon the shot
             cGridData[xPos][yPos] = 6;
             cGrid[xPos][yPos].setBackground(Color.RED);
             turn++;
@@ -665,13 +666,21 @@ public class Main implements KeyListener {
         }
         return (text);
     }
-
+    /**
+     * This method returns the result of the computer shot
+     * It includes the computer algorithm, that simulates playing against a real person
+     * Like the userShot it returns a string
+     * The bottom of the method uses the x and y pos to check if hit/miss
+     * If it shoots at a already shot at postion, it recalls the method later on because the turn doesn't progress
+     */
     public static String computerShot() {
+        /* Local variables */
         String text;
         int xPos = (int)Math.floor(Math.random()*10); // 0 to 9
         int yPos = (int)Math.floor(Math.random()*10); // 0 to 9
 
         if (lastX != -1 && lastY != -1) { // If last shot was a hit
+            /* Determines the next shot to hit around where the last shot was */
             int n;
             if (hitDirection == "vertical") {
                 if (lastY == 0) { // Top edge
@@ -692,24 +701,24 @@ public class Main implements KeyListener {
                     n = list[(int)Math.floor(Math.random()*2)]; // 0 or 3
                 }       
             } else { // Hit direction is null (unknown)
-                if (lastX == 0 && lastY == 0) {
+                if (lastX == 0 && lastY == 0) { // Top left corner
                     n = (int)Math.floor(Math.random()*2); // 0 - 1 
-                } else if (lastX == 0 && lastY == 9) {
+                } else if (lastX == 0 && lastY == 9) { // Bottom left corner
                     int[] list = {0, 2};
                     n = list[(int)Math.floor(Math.random()*2)]; // 0 or 2
-                } else if (lastX == 9 && lastY == 0) {
+                } else if (lastX == 9 && lastY == 0) { // Top right corner
                     int[] list = {1, 3};
                     n = list[(int)Math.floor(Math.random()*2)]; // 1 or 3
-                } else if (lastX == 9 && lastY == 9) {
+                } else if (lastX == 9 && lastY == 9) { // Bottom right corner
                     n = (int)Math.floor(Math.random()*2)+2; // 2 or 3
-                } else if (lastX == 0) {
+                } else if (lastX == 0) { // Left edge
                     n = (int)Math.floor(Math.random()*3); // 0 - 2 
-                } else if (lastX == 9) {
+                } else if (lastX == 9) { // Right edge
                     n = (int)Math.floor(Math.random()*3)+1; // 1 - 3 
-                } else if (lastY == 0) {
+                } else if (lastY == 0) { // Top edge
                     int[] list = {0, 1, 3};
                     n = list[(int)Math.floor(Math.random()*3)]; // 0, 1, or 3 
-                } else if (lastY == 9) {
+                } else if (lastY == 9) { // Bottom edge
                     int[] list = {0, 2, 3};
                     n = list[(int)Math.floor(Math.random()*3)]; // 0, 2, or 3 
                 }else { // Between (1-8, 1-8)
@@ -717,49 +726,57 @@ public class Main implements KeyListener {
                 }
             }
        
-            switch (n) {
-                case 0:
+            switch (n) { // Using n to find the next shot
+                case 0: // One tile to right
                     xPos = lastX + 1;
                     yPos = lastY; 
                     break;
-                case 1:
+                case 1: // One tile down
                     xPos = lastX;
                     yPos = lastY + 1;  
                     break;
-                case 2:
+                case 2: // One tile up
                     xPos = lastX;
                     yPos = lastY - 1;
                     break; 
-                case 3:
+                case 3: // One tile left
                     xPos = lastX - 1;
                     yPos = lastY;
                     break;
                 default:
                     System.out.println("Error: "+n);
+                    break;
             }
-            System.out.println(n);
-            System.out.println(xPos);
-            System.out.println(yPos);
         } 
         
         if (uGridData[xPos][yPos] >= 6) { // Already shot this position, either hit or miss
             text = "Error: Already shot here";
+             /*
+              * This is my fail safe
+              * It checks if tiles around tile has already been hit
+              * If there are no tiles around to hit it will reset shooting and fire randomly
+              * If there are tiles around then it will fire at them
+              * If I don't add this then the program will essentially crash
+              */
             if (hitDirection == "vertical") {
-                if (lastY-1 >= 0) {
-                    if (uGridData[lastX][lastY-1] >= 6) {
-                        if (lastY+1 <= 9) {
-                            if (uGridData[lastX][lastY+1] >= 6) {
-                                if (lastY == originalY) {
-                                    System.out.println("Error loop");
-                                    if (lastX-1 >= 0) {
-                                        if (uGridData[lastX-1][lastY] <= 5) {
-                                            hitDirection = "horizontal";
+                if (lastY-1 >= 0) { // Is one tile up is inside bounds
+                    if (uGridData[lastX][lastY-1] >= 6) { // Has that tile already been shot at
+                        if (lastY+1 <= 9) { // Is one tile down inside bounds
+                            if (uGridData[lastX][lastY+1] >= 6) { 
+                                if (lastY == originalY) { // Has the postion already been reset (ie last turn)
+                                    // Program is stuck in a loop
+                                    System.out.println("Error loop"); 
+                                    if (lastX-1 >= 0) { // Is one tile left out of bounds
+                                        if (uGridData[lastX-1][lastY] <= 5) { // is this tile not been shot at
+                                            hitDirection = "horizontal"; // Change the hitDirection because there is a tile it can hit
                                         } else {
+                                            // Reset shooting, fire randomly
                                             hitDirection = null;
                                             lastX = -1;
                                             lastY = -1;
                                         }
-                                    } else if (lastX+1 <= 9) {
+                                    } else if (lastX+1 <= 9) { // Is one tile left out of bounds
+                                        // Rest is same as above 
                                         if (uGridData[lastX+1][lastY] <= 5) {
                                             hitDirection = "horizontal";
                                         } else {
@@ -767,20 +784,22 @@ public class Main implements KeyListener {
                                             lastX = -1;
                                             lastY = -1;
                                         }
-                                    } else {
+                                    } else { // Cannot find a shootable tile around this tile
+                                        // Reset shooting, fire randomly
                                         hitDirection = null;
                                         lastX = -1;
                                         lastY = -1;
                                     }
                                    
                                 } else {
-                                    lastY = originalY;
+                                    lastY = originalY; // Reset the shooting postion to original location
+                                    // Next time it will fire in a new direction
                                 }
                             }
                         }
                     }
                 }
-            } else if (hitDirection == "horizontal") {
+            } else if (hitDirection == "horizontal") { // This is same as above but for horizontal hit direction and in reverse 
                 if (lastX-1 >= 0) {
                     if (uGridData[lastX-1][lastY] >= 6) {
                         if (lastX+1 <= 9) {
@@ -818,10 +837,10 @@ public class Main implements KeyListener {
             }
                    
         } else if (uGridData[xPos][yPos] < 6 && uGridData[xPos][yPos] != 0) { // Hit
-            uGrid[xPos][yPos].setIcon(new ImageIcon(shipImageHit.getImage().getScaledInstance(uGrid[xPos][yPos].getWidth(), uGrid[xPos][yPos].getHeight(),Image.SCALE_DEFAULT)));
+            uGrid[xPos][yPos].setIcon(new ImageIcon(shipImageHit.getImage().getScaledInstance(uGrid[xPos][yPos].getWidth(), uGrid[xPos][yPos].getHeight(),Image.SCALE_DEFAULT))); // Change the image to the tile
             uShipHitPoints[(uGridData[xPos][yPos]-1)]--; // Lower hitpoint of the hit user ship by 1
-            if (lastX > -1 || lastY > -1) {
-                if (hitDirection == null) {
+            if (lastX > -1 || lastY > -1) { // If last shot was a hit (and this shot)
+                if (hitDirection == null) { // No direction is currently assigned
                     if (lastX < xPos || lastX > xPos) {
                         hitDirection = "horizontal";                 
                     } else if (lastY < yPos || lastY > yPos) {
@@ -832,6 +851,7 @@ public class Main implements KeyListener {
             }
             if (hitDirection == null) {
                 // Original postion of shot
+                // Used later in code if needed
                 originalX = xPos;
                 originalY = yPos;
             }
@@ -839,9 +859,9 @@ public class Main implements KeyListener {
             // Update last shots
             lastX = xPos; 
             lastY = yPos;
-            if (uShipHitPoints[uGridData[xPos][yPos]-1] == 0) {
-                boldText = true;
-                switch (uGridData[xPos][yPos]-1) {
+            if (uShipHitPoints[uGridData[xPos][yPos]-1] == 0) { // If the entire shis is destroyed
+                boldText = true; // Text will be bold
+                switch (uGridData[xPos][yPos]-1) { // Which ship was destroyed (name)
                     case 0:
                         text = "Opponent has destroyed your Destroyer!"; 
                         break;
@@ -873,37 +893,37 @@ public class Main implements KeyListener {
             turn++;
         } else { // Nothing is hit
             boldText = false; 
-            uGrid[xPos][yPos].setBackground(Color.black);
+            uGrid[xPos][yPos].setBackground(Color.black); // Show that the tile missed
             uGridData[xPos][yPos] = 7;
             text = "Opponent missed! Nothing was hit";
-            if (lastX > -1 || lastY > -1) {
+            if (lastX > -1 || lastY > -1) { // Last shot was a hit
                 if (hitDirection == null) {
                     if (lastX > 0 && lastX < 9) {
-                        if (lastX < xPos && uGridData[lastX-1][lastY] == 6 || lastX > xPos && uGridData[lastX+1][lastY] == 6) {
-                            hitDirection = "vertical";
+                        if (lastX < xPos && uGridData[lastX-1][lastY] == 6 || lastX > xPos && uGridData[lastX+1][lastY] == 6) { // Left and right tiles are both misses
+                            hitDirection = "vertical"; // Change hit direction to vertical (was horizontal)
                         }
-                    } else if (lastX == 0 && lastY == 0) {
+                    } else if (lastX == 0 && lastY == 0) { // Top left
+                        if (lastX < xPos) { // Shot was to the right of previous shot
+                            hitDirection =  "vertical";
+                        }
+                    } else if (lastX == 0 && lastY == 9) { // Bottom left
                         if (lastX < xPos) {
                             hitDirection =  "vertical";
                         }
-                    } else if (lastX == 0 && lastY == 9) {
-                        if (lastX < xPos) {
-                            hitDirection =  "vertical";
+                    } else if (lastX == 9 && lastY == 0) { // Top right
+                        if (lastX > xPos) { // Shot was to the left of previous shot
+                            hitDirection = "vertical"; 
                         }
-                    } else if (lastX == 9 && lastY == 0) {
+                    } else if (lastX == 9 && lastY == 9) { // Bottom right
                         if (lastX > xPos) {
                             hitDirection = "vertical"; 
                         }
-                    } else if (lastX == 9 && lastY == 9) {
-                        if (lastX > xPos) {
-                            hitDirection = "vertical"; 
-                        }
-                    } else if (lastX == 0) {
+                    } else if (lastX == 0) { // Left edge
                         if (lastX < xPos) {
                             hitDirection = "vertical"; 
                         }
                         
-                    } else if (lastX == 9) {
+                    } else if (lastX == 9) { // Right edge
                         if (lastX > xPos)
                         hitDirection = "vertical"; 
                     }
@@ -912,33 +932,34 @@ public class Main implements KeyListener {
                         if (lastY < yPos && uGridData[lastX][lastY-1] == 6 || lastY > yPos && uGridData[lastX][lastY+1] == 6) {
                             hitDirection = "horizontal";
                         }
-                    }else if (lastY == 0 && lastX == 0) {
+                    }else if (lastY == 0 && lastX == 0) { // Top left
                         if (lastY < yPos) {
                             hitDirection = "horizontal";
                         }
-                    } else if (lastY == 0 && lastX == 9) {
+                    } else if (lastY == 0 && lastX == 9) { // Top right
                         if (lastY < yPos) {
                             hitDirection = "horizontal";
                         }  
-                    } else if (lastY == 9 && lastX == 0) {
+                    } else if (lastY == 9 && lastX == 0) { // Bottom left
                         if (lastY > yPos) {
                             hitDirection = "horizontal";
                         }
-                    } else if (lastY == 9 && lastX == 9) {
+                    } else if (lastY == 9 && lastX == 9) { // Bottom right
                         if (lastY > yPos) {
                             hitDirection = "horizontal";
                         }
-                    } else if (lastY == 0) {
+                    } else if (lastY == 0) { // Top edge
                         if (lastY < yPos) {
                             hitDirection = "horizontal";
                         }
-                    } else if (lastY == 9) {
+                    } else if (lastY == 9) { // Bottom edge
                         if (lastY > yPos) {
                             hitDirection = "horizontal";
                         }
                     }
                     System.out.println(hitDirection);
                 } else {
+                    // Go back to the first shot because it has reached the end of the ship
                     lastX = originalX;
                     lastY = originalY;
                 }            
@@ -948,21 +969,35 @@ public class Main implements KeyListener {
         return (text);
     }
 
+    /**
+     * This method is called to check if the game is over. 
+     * It checks if the computer has destroyed all the users ships, or if the user has destroyed all the computers ships
+     * If one of the players win, then it calls the screenTimer method that displays the text at the bottom of this screen
+     * The boolean gameOver is a global variable to prevent any inputs after the game is over
+     * This method is called once every turn
+     * The method parameter includes the JLabel at the bottom of the screen
+     */
     public static void winChecker(JLabel screenText) {
         if (uShipHitPoints[0] == 0 && uShipHitPoints[1] == 0 && uShipHitPoints[2] == 0 &&
-        uShipHitPoints[3] == 0 && uShipHitPoints[4] == 0) {
+        uShipHitPoints[3] == 0 && uShipHitPoints[4] == 0) { // Are all ships destroyed (ie hitpoints are 0)
             System.out.println("Game over, computer wins");
             gameOver = true;
-            screenTimer("Game over, computer wins", screenText);
+            screenTimer("Game over, computer wins", screenText); 
         } else if (cShipHitPoints[0] == 0 && cShipHitPoints[1] == 0 && cShipHitPoints[2] == 0 &&
-        cShipHitPoints[3] == 0 && cShipHitPoints[4] == 0) {
+        cShipHitPoints[3] == 0 && cShipHitPoints[4] == 0) { // Checks the same but for the the computer's ships
             System.out.println("Game over, user wins");
             gameOver = true;
             screenTimer("Game over, user wins", screenText);
-
         }   
     }
 
+    /**
+     * This method uses a timer to create the text shown at the bottom of the screen
+     * The first parameter is the text to display(string), the second is the JLabel that the text will be written on
+     * The timer has a constant 30ms delay, each character is revealed after 30ms
+     * This method also calls for the computerShot method after it has completed the user's shot timer
+     * It also calls the win checker method, that will break the timer loop if the game is over
+     */
     public static void screenTimer(String text, JLabel screenText) {
         if (boldText) {
             // Make text bold
@@ -972,36 +1007,36 @@ public class Main implements KeyListener {
             screenText.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 13));
         }
         Timer timer = new Timer(30, new ActionListener() { //Timer runs every 30ms
-            int index = 0;
+            int i = 0;
             @Override
             public void actionPerformed(ActionEvent e) {
-                if (index < text.length()) {
+                if (i < text.length()) {
                     clickable = false;
-                    // Reveal one more character
-                    screenText.setText(text.substring(0, index + 1)); // Starts from 0(first character) and adds each character up to the int of index
-                    index++;
-                } else {
-                    // Stop the timer once all characters are revealed
-                    ((Timer)e.getSource()).stop();
-                    if (!gameOver) { // Game over is false
-                        winChecker(screenText);
+                    // Reveal another character
+                    screenText.setText(text.substring(0, i + 1)); // Starts from 0(first character) and adds each character up to the int of i
+                    i++;
+                } else { // All characters are visible
+                    ((Timer)e.getSource()).stop(); // Stop the timer
+                    if (!gameOver) { 
+                        winChecker(screenText); // Check if the user has won in the last turn
                     }
-                    if (turn%2 == 1 && !gameOver) { //If it is end of user's turn
-                        String ntext = null;
+                    if (turn%2 == 1 && !gameOver) { //If it is end of user's turn and user didn't win
+                        String newText = null;
                         if (gameOver==false) {
-                            while (turn%2 == 1) { //
-                                ntext = computerShot(); // Calls for userShot method, which will return hit result
+                            while (turn%2 == 1) { // Continue calling until computer has hit a valid tile
+                                newText = computerShot(); 
                             }
                             try {
-                                Thread.sleep(500); // Pause for 0.5s
-                                screenTimer(ntext, screenText);    
-                            } catch (InterruptedException ie) {                          
+                                Thread.sleep(500); // Pause the GUI for 0.5s
+                                screenTimer(newText, screenText); // Recall this method to show the result of computer's shot
+                            } catch (InterruptedException ie) { //Error catch             
                                 Thread.currentThread().interrupt(); 
                             } 
                         }      
-                    } else if (gameOver) {
+                    } else if (gameOver) { 
+                        // If game is over make the grid not clickable so you cannot start a new turn
                         clickable = false;
-                    } else {
+                    } else { // It is the users turn
                         clickable = true;
                         winChecker(screenText);
                     }  
@@ -1011,7 +1046,10 @@ public class Main implements KeyListener {
         timer.start();
     }
 
-    public static void main(String[] args) {  // Called when the program is run
+    /**
+     * Method used to run the code
+     */
+    public static void main(String[] args) { 
         startGUI(); // Calls the grid method at the start of the program
         new Main(); // Constructor for Jframe(GUI) and ships
     }
