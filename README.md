@@ -1,19 +1,14 @@
-## Getting Started
+------------------------------------------------------------------------
+This is the project README file. Here, you should describe your project.
+------------------------------------------------------------------------
+PROJECT TITLE: Battleships
+Date: 23/07
+AUTHOR: Viraaj Ravji
+Purpose: CSC233 assesment
 
-Welcome to the VS Code Java world. Here is a guideline to help you get started to write Java code in Visual Studio Code.
+This project is created for the purpose of a computer science assesment
+The game was entirely created by myself. All the code and assets are created by myself
+The game is inspired by Battleships. However, has been adapted by myself for the purpose of a single player game in java
+Hopefully you enjoy!
 
-## Folder Structure
 
-The workspace contains two folders by default, where:
-
-- `src`: the folder to maintain sources
-- `lib`: the folder to maintain dependencies
-
-Meanwhile, the compiled output files will be generated in the `bin` folder by default.
-
-> If you want to customize the folder structure, open `.vscode/settings.json` and update the related settings there.
-
-## Dependency Management
-
-The `JAVA PROJECTS` view allows you to manage your dependencies. More details can be found [here](https://github.com/microsoft/vscode-java-dependency#manage-dependencies).
-# BattleshipsCSC223
