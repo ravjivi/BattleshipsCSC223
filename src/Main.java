@@ -1,9 +1,9 @@
-/* 
+/** 
 * PROJECT TITLE: Battleships
-* VERSION or DATE: Version 5.6, 23.07.24
+* VERSION or DATE: Version 6, 24.07.24
 * AUTHOR: Viraaj Ravji
 * DETAILS:
-    * Fixed issue with not adding comments to the newly commited files
+    * Finished Game
 */
 
 /*LIBRARY*/
@@ -51,7 +51,6 @@ public class Main implements KeyListener {
     private static int originalX;
     private static int originalY;
 
-
     /*IMAGES*/
     private static ImageIcon shipImageH2 = new ImageIcon("assets/ship_texture_h2.jpg");
     private static Image scaleshipImageH2 = shipImageH2.getImage().getScaledInstance(tileWidth, tileHeight*2,Image.SCALE_DEFAULT);
@@ -65,13 +64,12 @@ public class Main implements KeyListener {
     private static ImageIcon shipImage = new ImageIcon("assets/ship_texture.jpg");
     private static ImageIcon shipImageHit = new ImageIcon("assets/ship_texture_hit.jpg");
 
-    /*
+    /**
      * This is my JFrame constructor
      * It is used to setup all the properies for my GUI
      * I also use this to add keyListeners to grid buttons and ship buttons. When these are selsected you can press keys like 'r' because it is a non static method
      * It also runs a method when the GUI is resized. It updates the size of the images and GUITAB, which is the space between the JPanels inside the GUI layout
      */
-    
     public Main() {
         // GUI window properties for JFrame
         f.setSize(GUIWIDTH+GUITAB*3, GUIHEIGHT+GUITAB*2);  
@@ -86,10 +84,11 @@ public class Main implements KeyListener {
                 }
                 uGrid[x][y].addKeyListener(this);
             }
-        }   
+        }
+
         f.addComponentListener(new ComponentAdapter() {
             @Override
-            public void componentResized(ComponentEvent e) { // Run when the GUI is resized
+            public void componentResized(ComponentEvent e) { // Run when the GUI is manually resized
                 for (int y=0; y<10; y++) {
                     for (int x=0; x<10;x++) {
                         if (uGridData[x][y] != 0 && uGridData[x][y] < 6) {
@@ -106,7 +105,8 @@ public class Main implements KeyListener {
         });
         refreshScreen();    
     }
-    /*
+
+    /**
      * Callled when new objects are added to the GUI like a JLabel
      * Used to fix bug where buttons called after f.setVisible are invisible
      */
@@ -115,7 +115,7 @@ public class Main implements KeyListener {
         f.setVisible(true);
     }
 
-    /*
+    /**
      * Creates the starting GUI for when the game is run
      * Creates all the JPanels visible before the game is started
      * JPanels allow the GUI to scale nicely i.e JButtons are smaller when the gui is downscaled
@@ -150,7 +150,7 @@ public class Main implements KeyListener {
                 userGrid.add(uGrid[x][y]);   
             }
         }
-        //adding labels on GUI
+        // Adding labels on GUI
         for (int x=0; x<11; x++) {
             if (x<10) {
                 labels[x] = new JLabel(" "+alphabetString[x]+" "); // Spaces are just to help alignment
@@ -189,6 +189,7 @@ public class Main implements KeyListener {
                     System.out.println ("Error: h"); 
                     break;
             }
+
             /*
              * ActionListner for when the ships are clicked
              * Identifies which button is pressed
@@ -200,7 +201,6 @@ public class Main implements KeyListener {
                     Object src = e.getSource(); 
                     for (int x=0; x<5; x++) {
                         if (src.equals(ships[x])) {
-                            System.out.println("User has selected Ship "+(x+1));
                             ships[shipSelection].setBorder(new LineBorder(Color.BLACK, 1)); // Makes previosly selected ship default outline
                             ships[x].setBorder(new LineBorder(Color.BLUE, 2)); // Makes new selection outlined in blue
                             userSelection = x+1;
@@ -233,21 +233,21 @@ public class Main implements KeyListener {
         screenText.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 13));
         textPanel.add(screenText);
         f.add(textPanel, BorderLayout.SOUTH);
-        //Instruction button
+        // Instruction button
         JButton instructionButton = new JButton("Instructions");
         buttonPanel.add(instructionButton); 
         instrcutions(instructionButton, computerPanel, shipPanel); // Calls the method to tell the button what to do
         gridActivity(computerPanel, shipPanel, buttonPanel, screenText); // Grid activity is for user cursor hovering and clicks
     }
 
-    /*
+    /**
      * Adds a mouseListener to the instructions button for when hovered
      * Uses html text layout to add break between lines
      * When the mouse hovers the button the ships need to hide, vice versa
      */
     public static void instrcutions(JButton instructionButton, JPanel computerPanel, JPanel shipPanel) {
         instructionButton.addMouseListener(new java.awt.event.MouseAdapter() {
-            JLabel instrunctionLabel = new JLabel("<html>Battleships!<br>" // Text on JLabel
+            JLabel instructionLabel = new JLabel("<html>Battleships!<br>" // Text on JLabel
             +"- In this game you play against the computer<br>" // br is a line break
             +"- The objective is to sink all the computer's ships before it sinks all of yours<br>"
             +"- Start by placing all your ships. Click a ship on the right to select it, and click again anywhere on the grid to place it. Press R on your keyboard to rotate the ship<br>"
@@ -257,17 +257,18 @@ public class Main implements KeyListener {
             +"- The computer will return a shot<br>"
             +"- The game will end when either player destroys all 5 of the opponents battleships</html>", JLabel.CENTER);
             public void mouseEntered(MouseEvent evt) {
-            shipPanel.setVisible(false);
-            computerPanel.add(instrunctionLabel);
+                shipPanel.setVisible(false);
+                computerPanel.add(instructionLabel);
             }
-            public void mouseExited (MouseEvent evt) {
-                computerPanel.remove(instrunctionLabel);
+            public void mouseExited(MouseEvent evt) {
                 shipPanel.setVisible(true);
+                computerPanel.remove(instructionLabel);
+
             }
         });
     }
 
-    /*
+    /**
      * Handles the inputs on the grid including mouse events and button actions
      * This method sets up the interactions for placing ships on the grid.
      * Requires 4 parameters, local variables declared in the startGUI() method
@@ -354,6 +355,7 @@ public class Main implements KeyListener {
                         }  
                     }
                 }); 
+
                 /*
                  * When the button is clicked this method is called
                  * Needs to check it isn't going to overlap another ship
@@ -436,11 +438,11 @@ public class Main implements KeyListener {
         });
     } 
 
-    /*
+    /**
      * Implements of the KeyListener
      * I only need the key pressed lisntener
      * Other 2 are required for the KeyListener implement
-    */
+     */
     @Override
     public void keyTyped(KeyEvent e) { // Typed text
     }
@@ -615,6 +617,7 @@ public class Main implements KeyListener {
             }      
         }
     }
+
     /**
      * This method is responsible for returing the result of the user's shot
      * The method inputs the x and y postion of the shot
@@ -666,6 +669,7 @@ public class Main implements KeyListener {
         }
         return (text);
     }
+
     /**
      * This method returns the result of the computer shot
      * It includes the computer algorithm, that simulates playing against a real person
@@ -796,10 +800,30 @@ public class Main implements KeyListener {
                                     // Next time it will fire in a new direction
                                 }
                             }
+                        } else if (lastY == originalY) {
+                            System.out.println("Error loop"); 
+                            hitDirection = null;
+                            lastX = -1;
+                            lastY = -1;
+                        } else {
+                            lastY = originalY; // Reset the shooting postion to original location
+                            // Next time it will fire in a new direction
                         }
                     }
+                } else if (uGridData[lastX][lastY+1] >= 6) {
+                    if (lastY == originalY) {
+                        System.out.println("Error loop"); 
+                        hitDirection = null;
+                        lastX = -1;
+                        lastY = -1;
+                    } else {
+                        lastY = originalY; // Reset the shooting postion to original location
+                        // Next time it will fire in a new direction
+                    }
+                   
                 }
             } else if (hitDirection == "horizontal") { // This is same as above but for horizontal hit direction and in reverse 
+                // Not adding comments because they are the same as above but for x instead of y
                 if (lastX-1 >= 0) {
                     if (uGridData[lastX-1][lastY] >= 6) {
                         if (lastX+1 <= 9) {
@@ -828,13 +852,29 @@ public class Main implements KeyListener {
                                     }
                                 } else {
                                     lastX = originalX;
-                                }
-                                
+                                }  
                             }
+                        } else if (lastX == originalX) {
+                            System.out.println("Error loop"); 
+                            hitDirection = null;
+                            lastX = -1;
+                            lastY = -1;
+                        } else {
+                            lastX = originalX; 
                         }
                     }
+                } else if (uGridData[lastX+1][lastY] >= 6) {
+                    if (lastX == originalX) {
+                        System.out.println("Error loop"); 
+                        hitDirection = null;
+                        lastX = -1;
+                        lastY = -1;
+                    } else {
+                        lastX = originalX;
+                    }  
                 }
             }
+            // If nothing happens then there is another possible shot so it will try again from the start
                    
         } else if (uGridData[xPos][yPos] < 6 && uGridData[xPos][yPos] != 0) { // Hit
             uGrid[xPos][yPos].setIcon(new ImageIcon(shipImageHit.getImage().getScaledInstance(uGrid[xPos][yPos].getWidth(), uGrid[xPos][yPos].getHeight(),Image.SCALE_DEFAULT))); // Change the image to the tile
@@ -846,7 +886,7 @@ public class Main implements KeyListener {
                     } else if (lastY < yPos || lastY > yPos) {
                         hitDirection = "vertical"; 
                     }
-                    System.out.println(hitDirection); 
+                    System.out.println("Hit Direction: "+hitDirection); 
                 }   
             }
             if (hitDirection == null) {
@@ -957,7 +997,7 @@ public class Main implements KeyListener {
                             hitDirection = "horizontal";
                         }
                     }
-                    System.out.println(hitDirection);
+                    System.out.println("Hit Direction: "+hitDirection);
                 } else {
                     // Go back to the first shot because it has reached the end of the ship
                     lastX = originalX;
